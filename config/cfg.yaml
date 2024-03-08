@@ -1,20 +1,24 @@
+# PATHS
 package_path: /home/tommaso/git_workspace/AutoDFTB
 dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
 slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3/
-box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
 xyz_dir: ${package_path}/data/xyz_files
 poscar_dir: ${package_path}/data/poscar_files
 json_dir: ${package_path}/data/json_files
 working_dir: ${package_path}/tmp
 
+# BOX SIZE
+box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
+
+# SLURM
 slurm_job_name: AutoDFTB+
-slurm_mem: 0
-slurm_ncpus: 8
-slurm_nnodes: 1
+slurm_mem:
+slurm_ncpus: 16
 slurm_nodelist:
 slurm_partition: long
 slurm_timeout: 2800
 slurm_output: outputs/slurm_out
-slurm_exclude: gn01,gn02,gn03,gn04
+slurm_exclude:
 
+# VERBOSITY
 verbose: True
