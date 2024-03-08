@@ -52,6 +52,21 @@ def count_unique_atoms_POSCAR(file_path: Path):
 
     return count, unique_atoms
 
+def _map_angular_momentum(atom_types):
+    max_angular_momentum_mapping = {
+        'C': 'p',
+        'O': 'p',
+        'H': 's',
+    }
+    max_angular_momentum = {}
+    for atom_type in atom_types:
+        max_angular_momentum[atom_type] = max_angular_momentum_mapping.get(atom_type, 's')
+        
+    max_angular_momentum_str = "\n\tMaxAngularMomentum {\n"
+    for atom, momentum in max_angular_momentum.items():
+        max_angular_momentum_str += f" \t   {atom} = \"{momentum}\"\n"
+    max_angular_momentum_str += " \t}"
+    return max_angular_momentum_str
 
 def prepare_dftbplus_input(
     file_name: Path,
@@ -60,6 +75,10 @@ def prepare_dftbplus_input(
     fermi_temperature: float = 1000.0,
     charge: int = None,
 ):
+    poscar_data = get_poscar_data(file_path=file_name)
+    atom_types = poscar_data['atom_types']
+    max_angular_momentum_str = _map_angular_momentum(atom_types=atom_types)
+    
     geometry = (
         """Geometry = VaspFormat {
     <<< """
@@ -79,10 +98,10 @@ Driver {}
         + """
     Separator = "-"
     Suffix = ".skf"
-    }
-    MaxAngularMomentum {
-    C = "p"
-    }
+    }\n"""
+    + max_angular_momentum_str
+    +f"""
+    
     MaxSCCIterations = """
         + f"{iterations}"
         + """
