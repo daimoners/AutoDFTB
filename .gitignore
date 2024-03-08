@@ -1,0 +1,8 @@
+*.xyz
+*.POSCAR
+*.png
+data/
+test/
+outputs/
+__pycache__/
+tmp/
