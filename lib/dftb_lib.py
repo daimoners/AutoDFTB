@@ -231,8 +231,4 @@ def get_poscar_data(file_path: Path):
 
 
 if __name__ == "__main__":
-    # from poscar_lib import xyz_to_poscar
-    # xyz_to_poscar('/home/mario/AutoDFTB/neutral_5540.xyz', "GO.POSCAR")
-    in_p = Path("/home/mario/AutoDFTB/GO.POSCAR")
-    slakos = Path("/home/mario/app/dftbplus/slakos/pbc-0-3")
-    a = prepare_dftbplus_input(file_name=in_p, slakos=slakos)
+    pass
