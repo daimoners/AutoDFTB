@@ -10,6 +10,7 @@ try:
     import subprocess
     import json
     from icecream import ic
+    from omegaconf import open_dict
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -37,7 +38,6 @@ def launch_dftb(dftb_bin_path: Path, working_dir: Path, verbose: bool = True):
 
 def clear_working_dir(working_dir: Path):
     shutil.rmtree(working_dir)
-    working_dir.mkdir()
 
 
 def check_dir(dir_path: Path | list[Path]):
@@ -67,47 +67,16 @@ def main(args):
     else:
         ic.disable()
 
-    Path(args.slurm_output).mkdir(parents=True, exist_ok=True)
-    executor = submitit.AutoExecutor(
-        folder=args.slurm_output,
-        slurm_max_num_timeout=30,
-    )
-
-    executor.update_parameters(
-        mem_gb=0 if not args.slurm_mem else args.slurm_mem,
-        tasks_per_node=1,
-        cpus_per_task=2 if not args.slurm_ncpus else args.slurm_ncpus,
-        nodes=args.slurm_nnodes,
-        timeout_min=args.slurm_timeout,
-        slurm_partition=args.slurm_partition,
-        slurm_exclude=args.slurm_exclude,
-    )
-
-    if args.slurm_nodelist:
-        executor.update_parameters(
-            slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
-        )
-
-    executor.update_parameters(name=args.slurm_job_name)
-    slurm_auto_dftb = SLURM_AutoDFTB(args)
-    job = executor.submit(slurm_auto_dftb)
-    print(f"Submitted job_id: {job.job_id}")
-
-
-def dftb(args):
-    # === Get hydra config paths === #
-    dftb_bin_path = Path(args.dftb_bin_path)
-    slakos = Path(args.slakos)
     xyz_dir = Path(args.xyz_dir)
-    check_dir([slakos, xyz_dir])
-    check_file(dftb_bin_path)
-    box_size = args.box_size
+    check_dir(xyz_dir)
+    working_dir = Path(args.working_dir)
     poscar_dir = Path(args.poscar_dir)
     poscar_dir.mkdir(exist_ok=True, parents=True)
-    json_dir = Path(args.json_dir)
-    json_dir.mkdir(exist_ok=True, parents=True)
-    working_dir = Path(args.working_dir)
-    working_dir.mkdir(exist_ok=True, parents=True)
+    box_size = (
+        [100.0, 0.0, 0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 100.0]
+        if not args.box_size
+        else args.box_size
+    )
 
     # === Convert xyz files to POSCAR files === #
     ic("Converting xyz files to POSCAR files...")
@@ -117,73 +86,118 @@ def dftb(args):
 
     # === Start DFTB+ simulations === #
     files = [f for f in poscar_dir.iterdir() if f.suffix.lower() == ".poscar"]
-    for file in tqdm(files):
-        # === Prepare and launch E0 simulation === #
-        ic(f"Prepare and launch E0 simulation for {file.name}...")
-        shutil.copy(file, working_dir.joinpath(file.name))
-        prepare_dftbplus_input(working_dir.joinpath(file.name), slakos)
-        launch_dftb(dftb_bin_path, working_dir, args.verbose)
+    ic(f"Submitting {len(files)} simulations...")
+    for file in files:
+        local_working_dir = working_dir.joinpath(f"{working_dir.stem}_{file.stem}")
+        local_working_dir.mkdir(exist_ok=True, parents=True)
+        with open_dict(args):
+            args.working_dir = str(local_working_dir)
+            args.file = str(file)
 
-        # === Get E0 simulation results === #
-        ic(f"Get E0 simulation results for {file.name}...")
-        values_to_find = [
-            "Nr. of electrons (up):",
-            "Total Electronic energy:",
-            "Fermi level:",
-        ]
-        results = get_results(values_to_find, working_dir.joinpath("detailed.out"))
-        results["file_name"] = file.stem
-        results["file_type"] = file.suffix
-
-        # === Prepare and launch E- simulation === #
-        ic(f"Prepare and launch E- simulation for {file.name}...")
-        prepare_dftbplus_input(working_dir.joinpath(file.name), slakos, charge=-1)
-        launch_dftb(dftb_bin_path, working_dir, args.verbose)
-
-        # === Get E- simulation results === #
-        ic(f"Get E- simulation results for {file.name}...")
-        values_to_find = ["Total Electronic energy:"]
-        results = get_results(
-            values_to_find,
-            working_dir.joinpath("detailed.out"),
-            found_values=results,
-            charge="-1",
+        Path(args.slurm_output).mkdir(parents=True, exist_ok=True)
+        executor = submitit.AutoExecutor(
+            folder=args.slurm_output,
+            slurm_max_num_timeout=30,
         )
 
-        # === Prepare and launch E+ simulation === #
-        ic(f"Prepare and launch E+ simulation for {file.name}...")
-        prepare_dftbplus_input(working_dir.joinpath(file.name), slakos, charge=+1)
-        launch_dftb(dftb_bin_path, working_dir, args.verbose)
-
-        # === Get E+ simulation results === #
-        ic(f"Get E+ simulation results for {file.name}...")
-        values_to_find = ["Total Electronic energy:"]
-        results = get_results(
-            values_to_find,
-            working_dir.joinpath("detailed.out"),
-            found_values=results,
-            charge="+1",
+        executor.update_parameters(
+            mem_gb=0 if not args.slurm_mem else args.slurm_mem,
+            tasks_per_node=1,
+            cpus_per_task=2 if not args.slurm_ncpus else args.slurm_ncpus,
+            timeout_min=args.slurm_timeout,
+            slurm_partition=args.slurm_partition,
+            slurm_exclude=args.slurm_exclude,
         )
 
-        # === Compute IP, EA and band_gap === #
-        ic(f"Compute IP, EA and band_gap for {file.name}...")
-        results["IP_ev"] = float(results["total_energy_eV"]) - float(
-            results["total_energy_eV_-1"]
-        )
-        results["EA_ev"] = float(results["total_energy_eV"]) - float(
-            results["total_energy_eV_+1"]
-        )
-        results["band_gap_ev"] = float(results["total_energy_eV_-1"]) - float(
-            results["total_energy_eV_+1"]
-        )
+        if args.slurm_nodelist:
+            executor.update_parameters(
+                slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
+            )
 
-        # === Clear the working directory === #
-        clear_working_dir(working_dir)
+        executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
+        slurm_auto_dftb = SLURM_AutoDFTB(args)
+        job = executor.submit(slurm_auto_dftb)
+        print(f"Submitted job_id: {job.job_id}")
 
-        ic("\nDone\n")
 
-        with open(str(json_dir.joinpath(f"{file.stem}.json")), "w") as f:
-            json.dump(results, f, indent=4)
+def dftb(args):
+    # === Get hydra config paths === #
+    dftb_bin_path = Path(args.dftb_bin_path)
+    slakos = Path(args.slakos)
+    check_file(dftb_bin_path)
+    json_dir = Path(args.json_dir)
+    json_dir.mkdir(exist_ok=True, parents=True)
+    working_dir = Path(args.working_dir)
+    file = Path(args.file)
+
+    # === Start DFTB+ simulations === #
+
+    # === Prepare and launch E0 simulation === #
+    ic(f"Prepare and launch E0 simulation for {file.name}...")
+    shutil.copy(file, working_dir.joinpath(file.name))
+    prepare_dftbplus_input(working_dir.joinpath(file.name), slakos)
+    launch_dftb(dftb_bin_path, working_dir, args.verbose)
+
+    # === Get E0 simulation results === #
+    ic(f"Get E0 simulation results for {file.name}...")
+    values_to_find = [
+        "Nr. of electrons (up):",
+        "Total Electronic energy:",
+        "Fermi level:",
+    ]
+    results = get_results(values_to_find, working_dir.joinpath("detailed.out"))
+    results["file_name"] = file.stem
+    results["file_type"] = file.suffix[1:]
+
+    # === Prepare and launch E- simulation === #
+    ic(f"Prepare and launch E- simulation for {file.name}...")
+    prepare_dftbplus_input(working_dir.joinpath(file.name), slakos, charge=-1)
+    launch_dftb(dftb_bin_path, working_dir, args.verbose)
+
+    # === Get E- simulation results === #
+    ic(f"Get E- simulation results for {file.name}...")
+    values_to_find = ["Total Electronic energy:"]
+    results = get_results(
+        values_to_find,
+        working_dir.joinpath("detailed.out"),
+        found_values=results,
+        charge="-1",
+    )
+
+    # === Prepare and launch E+ simulation === #
+    ic(f"Prepare and launch E+ simulation for {file.name}...")
+    prepare_dftbplus_input(working_dir.joinpath(file.name), slakos, charge=+1)
+    launch_dftb(dftb_bin_path, working_dir, args.verbose)
+
+    # === Get E+ simulation results === #
+    ic(f"Get E+ simulation results for {file.name}...")
+    values_to_find = ["Total Electronic energy:"]
+    results = get_results(
+        values_to_find,
+        working_dir.joinpath("detailed.out"),
+        found_values=results,
+        charge="+1",
+    )
+
+    # === Compute IP, EA and band_gap === #
+    ic(f"Compute IP, EA and band_gap for {file.name}...")
+    results["IP_ev"] = float(results["total_energy_eV"]) - float(
+        results["total_energy_eV_-1"]
+    )
+    results["EA_ev"] = float(results["total_energy_eV"]) - float(
+        results["total_energy_eV_+1"]
+    )
+    results["band_gap_ev"] = float(results["total_energy_eV_-1"]) - float(
+        results["total_energy_eV_+1"]
+    )
+
+    # === Clear the working directory === #
+    clear_working_dir(working_dir)
+
+    ic("\nDone\n")
+
+    with open(str(json_dir.joinpath(f"{file.stem}.json")), "w") as f:
+        json.dump(results, f, indent=4)
 
 
 if __name__ == "__main__":
