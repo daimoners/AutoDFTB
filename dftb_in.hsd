@@ -1,0 +1,45 @@
+Geometry = VaspFormat {
+    <<< 'GO.POSCAR'
+}
+
+Driver {}
+    
+Hamiltonian = DFTB {
+    Scc = Yes
+    SlaterKosterFiles = Type2FileNames {
+    Prefix = '/home/mario/app/dftbplus/slakos/pbc-0-3/'
+    Separator = "-"
+    Suffix = ".skf"
+    }
+
+	MaxAngularMomentum {
+ 	   C = "p"
+ 	   H = "s"
+ 	   O = "p"
+ 	}
+    
+    MaxSCCIterations = 200
+    Filling = Fermi {
+        Temperature [K] = 1000.0
+    }
+    KPointsAndWeights = SupercellFolding {
+    1 0 0
+    0 1 0
+    0 0 1
+    0.5 0.5 0.0
+    }
+     
+}
+
+Options {
+    WriteDetailedXml = Yes
+}
+
+Analysis {
+    CalculateForces = Yes
+    WriteEigenvectors = Yes
+}
+
+ParserOptions {
+    ParserVersion = 12
+}
