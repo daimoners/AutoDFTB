@@ -52,7 +52,27 @@ def count_unique_atoms_POSCAR(file_path: Path):
 
     return count, unique_atoms
 
-def _map_angular_momentum(atom_types):
+def _map_angular_momentum(atom_types:list)->str:
+    """
+Maps atomic types to their corresponding maximum angular momentum according to the given atom types.
+
+Args:
+    atom_types (list): A list of atomic types.
+
+Returns:
+    str: A string containing the mapped maximum angular momentum for each atom type.
+
+Example:
+    atom_types = ['C', 'O', 'H']
+    _map_angular_momentum(atom_types)
+    '
+        MaxAngularMomentum {
+            C = "p"
+            O = "p"
+            H = "s"
+        }
+    '
+    """
     max_angular_momentum_mapping = {
         'H':  's',
         'He': 's',
@@ -189,6 +209,7 @@ def prepare_dftbplus_input(
     iterations: int = 200,
     fermi_temperature: float = 1000.0,
     charge: int = None,
+    max_steps:int = 100
 ):
     poscar_data = get_poscar_data(file_path=file_name)
     atom_types = poscar_data['atom_types']
@@ -201,7 +222,20 @@ def prepare_dftbplus_input(
         + """
 }
 
-Driver {}
+    Driver = GeometryOptimization {
+    Optimizer = Rational {}
+    LatticeOpt = Yes
+    FixAngles = Yes
+    FixLengths = No No Yes
+    MaxSteps = """
+     + f'{max_steps}'+
+    """               
+    OutputPrefix =  """
+    + f'opt_{file_name.name}'
+    +
+    """     
+    Convergence {GradElem = 1E-3}   
+    }
     """
     )
     hamiltonian = (
@@ -322,6 +356,29 @@ def get_results(
 
 
 def get_poscar_data(file_path: Path):
+    """
+    Reads a VASP POSCAR file and extracts relevant information.
+
+    Args:
+        file_path (Path): The path to the POSCAR file.
+
+    Returns:
+        dict: A dictionary containing the extracted data including scale factor, cell box dimensions, 
+              atom types, number of atoms per type, and atomic coordinates.
+
+    Example:
+        file_path = Path("POSCAR")
+        data = get_poscar_data(file_path)
+        print(data)
+        {
+            'scale_factor': 1.0,
+            'cell_box': [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]],
+            'atom_types': ['C', 'H'],
+            'num_atoms': [4, 8],
+            'coordinates': [[0.0, 0.0, 0.0], [0.5, 0.5, 0.0], [0.0, 0.5, 0.5], [0.5, 0.0, 0.5], 
+                            [0.25, 0.25, 0.25], [0.75, 0.75, 0.25], [0.25, 0.75, 0.75], [0.75, 0.25, 0.75]]
+        }
+    """
     with open(str(file_path), "r") as f:
         lines = f.readlines()
 
@@ -346,4 +403,7 @@ def get_poscar_data(file_path: Path):
 
 
 if __name__ == "__main__":
-    pass
+    # slakos = Path('/home/mario/app/dftbplus/slakos/pbc-0-3')
+    # in_file = Path('/home/mario/AutoDFTB/graphene_68.POSCAR')
+    # prepare_dftbplus_input(in_file, slakos=slakos)
+    pass 
