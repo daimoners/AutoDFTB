@@ -20,7 +20,25 @@ def get_total_electrons(file: Path):
                     return int(match.group(0))
 
 
-def get_band_gap(file: Path):
+def get_band_gap(file: Path)->float:
+    """
+    Calculates the band gap of a material from its electronic structure data.
+
+    Args:
+        file (Path): The path to the file containing the output structure data.
+
+    Returns:
+        float: The band gap of the material.
+
+    Raises:
+        FileNotFoundError: If the specified file does not exist.
+
+    Example:
+        file_path = Path("electronic_structure.dat")
+        band_gap = get_band_gap(file_path)
+        print(band_gap)
+        1.2
+    """
     total_electrons = get_total_electrons(file)
     lumo = total_electrons / 2
     homo = lumo + 1
