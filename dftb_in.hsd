@@ -1,0 +1,51 @@
+Geometry = VaspFormat {
+    <<< 'graphene_68.POSCAR'
+}
+
+    Driver = GeometryOptimization {
+    Optimizer = Rational {}
+    LatticeOpt = Yes
+    FixAngles = Yes
+    FixLengths = No No Yes
+    MaxSteps = 100               
+    OutputPrefix =  opt_graphene_68.POSCAR     
+    Convergence {GradElem = 1E-4}   
+    }
+    
+Hamiltonian = DFTB {
+    Scc = Yes
+    SlaterKosterFiles = Type2FileNames {
+    Prefix = '/home/mario/app/dftbplus/slakos/pbc-0-3/'
+    Separator = "-"
+    Suffix = ".skf"
+    }
+
+	MaxAngularMomentum {
+ 	   C = "p"
+ 	}
+    
+    MaxSCCIterations = 200
+    Filling = Fermi {
+        Temperature [K] = 1000.0
+    }
+    KPointsAndWeights = SupercellFolding {
+    1 0 0
+    0 1 0
+    0 0 1
+    0.5 0.5 0.0
+    }
+     
+}
+
+Options {
+    WriteDetailedXml = Yes
+}
+
+Analysis {
+    CalculateForces = Yes
+    WriteEigenvectors = Yes
+}
+
+ParserOptions {
+    ParserVersion = 12
+}
