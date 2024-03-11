@@ -6,3 +6,5 @@ test/
 outputs/
 __pycache__/
 tmp/
+*.hsd
+*.out

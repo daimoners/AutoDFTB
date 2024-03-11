@@ -4,7 +4,8 @@ try:
     import hydra
     from tqdm import tqdm
     from lib.poscar_lib import xyz_to_poscar
-    from lib.dftb_lib import prepare_dftbplus_input, get_poscar_data, get_results
+    from lib.utils_lib import get_poscar_data, get_results
+    from lib.dftb_lib import prepare_dftbplus_input
     import shutil
     import os
     import subprocess
@@ -74,7 +75,7 @@ def main(args):
     poscar_dir.mkdir(exist_ok=True, parents=True)
     box_size = (
         [100.0, 0.0, 0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 100.0]
-        if not args.box_size
+        if (not args.periodic and not args.box_size)
         else args.box_size
     )
 
@@ -123,7 +124,6 @@ def main(args):
 def dftb(args):
     # === Get hydra config paths === #
     dftb_bin_path = Path(args.dftb_bin_path)
-    slakos = Path(args.slakos)
     check_file(dftb_bin_path)
     json_dir = Path(args.json_dir)
     json_dir.mkdir(exist_ok=True, parents=True)
@@ -135,7 +135,7 @@ def dftb(args):
     # === Prepare and launch E0 simulation === #
     ic(f"Prepare and launch E0 simulation for {file.name}...")
     shutil.copy(file, working_dir.joinpath(file.name))
-    prepare_dftbplus_input(working_dir.joinpath(file.name), slakos)
+    prepare_dftbplus_input(args, working_dir.joinpath(file.name))
     launch_dftb(dftb_bin_path, working_dir, args.verbose)
 
     # === Get E0 simulation results === #
@@ -151,7 +151,9 @@ def dftb(args):
 
     # === Prepare and launch E- simulation === #
     ic(f"Prepare and launch E- simulation for {file.name}...")
-    prepare_dftbplus_input(working_dir.joinpath(file.name), slakos, charge=-1)
+    with open_dict(args):
+        args.charge = -1
+    prepare_dftbplus_input(args, working_dir.joinpath(file.name))
     launch_dftb(dftb_bin_path, working_dir, args.verbose)
 
     # === Get E- simulation results === #
@@ -166,7 +168,9 @@ def dftb(args):
 
     # === Prepare and launch E+ simulation === #
     ic(f"Prepare and launch E+ simulation for {file.name}...")
-    prepare_dftbplus_input(working_dir.joinpath(file.name), slakos, charge=+1)
+    with open_dict(args):
+        args.charge = +1
+    prepare_dftbplus_input(args, working_dir.joinpath(file.name))
     launch_dftb(dftb_bin_path, working_dir, args.verbose)
 
     # === Get E+ simulation results === #

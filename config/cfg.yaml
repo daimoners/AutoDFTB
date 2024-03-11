@@ -8,7 +8,15 @@ json_dir: ${package_path}/data/json_files
 working_dir: ${package_path}/tmp
 
 # BOX SIZE
+periodic: True
 box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
+
+# DFTB
+optimize_geometry: False
+charge: 0
+max_iterations: 200
+max_steps: 100
+fermi_temperature: 1000.0
 
 # SLURM
 slurm_job_name: AutoDFTB+
