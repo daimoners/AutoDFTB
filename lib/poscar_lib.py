@@ -1,5 +1,4 @@
 try:
-    import os
     from pathlib import Path
 
 except Exception as e:

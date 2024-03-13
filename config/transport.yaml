@@ -1,0 +1,31 @@
+# PATHS
+package_path: /home/tommaso/git_workspace/AutoDFTB
+xyz_dir: ${package_path}/data/dftb/xyz_files
+xyz_dir_fixed: ${package_path}/data/transport/xyz_files_fixed
+electrodes_dir: ${package_path}/data/transport/electrodes
+
+# BOX SIZE
+box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
+bond_lenght: 1.42
+delta_x: 0.4
+delta_y: 0.4
+delta_interface: 1.88
+remove_fixeds_when_finished: False
+
+# ELECTRODE
+x_len: 3
+y_len: 8
+type: armchair
+
+# SLURM
+slurm_job_name: Graphene_Transport
+slurm_mem:
+slurm_ncpus: 16
+slurm_nodelist:
+slurm_partition: long
+slurm_timeout: 2800
+slurm_output: outputs/slurm_out
+slurm_exclude:
+
+# VERBOSITY
+verbose: True
