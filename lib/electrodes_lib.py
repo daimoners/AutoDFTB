@@ -4,6 +4,7 @@ try:
     import numpy as np
     import math
     from icecream import ic
+    import json
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -83,10 +84,14 @@ def check_interface_num_atoms(
 
 
 def get_electrode(
-    out_path: Path, x_len: int = 3, y_len: int = 8, type: str = "armchair"
+    out_path: Path,
+    x_len: int = 3,
+    y_len: int = 8,
+    type: str = "armchair",
+    sheet: bool = True,
 ):
     # Genera un foglio di grafene ideale
-    graphene_sheet = graphene_nanoribbon(x_len, y_len, type, sheet=True)
+    graphene_sheet = graphene_nanoribbon(x_len, y_len, type, sheet=sheet)
     # Salva la struttura in un file XYZ
     graphene_sheet.write(out_path)
 
@@ -140,16 +145,28 @@ def generate_electrode(
 
     offset = max(X_el) + bond_lenght * math.cos(math.pi / 6)
 
+    atom_range = {}
     new_coordinates = []
-    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):
-        new_coordinates.append((atom, x, y, z))
 
     atoms, X, Y, Z = read_from_xyz_file(file_path)
-    for atom, x, y, z in zip(atoms, X, Y, Z):
+    for atom, x, y, z in zip(atoms, X, Y, Z):  # device
         x += offset
         new_coordinates.append((atom, x, y, z))
 
-    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):
+    atom_range["device"] = [1, len(atoms)]
+    atom_range["source"] = [
+        atom_range["device"][1] + 1,
+        atom_range["device"][1] + len(atoms_el),
+    ]
+    atom_range["drain"] = [
+        atom_range["source"][1] + 1,
+        atom_range["source"][1] + len(atoms_el),
+    ]
+
+    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # source
+        new_coordinates.append((atom, x, y, z))
+
+    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # drain
         x += offset + cell_x
         new_coordinates.append((atom, x, y, z))
 
@@ -158,6 +175,9 @@ def generate_electrode(
         file.write("Atoms\n")
         for atom, x, y, z in new_coordinates:
             file.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
+
+    with open(str(out_path.with_suffix(".json")), "w") as f:
+        json.dump(atom_range, f, indent=4)
 
 
 if __name__ == "__main__":
