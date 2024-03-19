@@ -92,8 +92,17 @@ def _map_angular_momentum(file_name: Path) -> str:
             }
         '
     """
-    poscar_data = get_poscar_data(file_path=file_name)
-    atom_types = poscar_data["atom_types"]
+    if file_name.suffix == ".POSCAR":
+        poscar_data = get_poscar_data(file_path=file_name)
+        atom_types = poscar_data["atom_types"]
+    elif file_name.suffix == ".gen":
+        atom_types = get_gen_data(file_path=file_name)
+    elif file_name.suffix == ".xyz":
+        atom_types = get_xyz_types(file_path=file_name)
+    else:
+        print(f"The {file_name.suffix} extension is not supported")
+        raise NotImplementedError
+
     max_angular_momentum_mapping = {
         "H": "s",
         "He": "s",
@@ -352,6 +361,31 @@ def get_poscar_data(file_path: Path):
     }
 
     return poscar_data
+
+
+def get_xyz_types(file_path: Path) -> list[str]:
+    atom_types = []
+
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    num_atoms = int(lines[0])
+
+    for line in lines[2 : 2 + num_atoms]:
+        atom_symbol = line.split()[0]
+        if atom_symbol not in atom_types:
+            atom_types.append(atom_symbol)
+    return atom_types
+
+
+def get_gen_data(file_path: Path) -> list[str]:
+    with open(file_path, "r") as f:
+        lines = f.readlines()
+
+    atom_types = lines[1]
+    atom_list = re.findall(r"\b\w\b", atom_types)
+    print(atom_list)
+    return atom_list
 
 
 if __name__ == "__main__":
