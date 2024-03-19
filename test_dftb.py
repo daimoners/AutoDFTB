@@ -79,24 +79,18 @@ def generate_electrode(
     atom_range["device"] = [1, len(atoms)]
     atom_range["source"] = [
         atom_range["device"][1] + 1,
-        atom_range["device"][1] + 2 * len(atoms_el),
+        atom_range["device"][1] + len(atoms_el),
     ]
     atom_range["drain"] = [
         atom_range["source"][1] + 1,
-        atom_range["source"][1] + 2 * len(atoms_el),
+        atom_range["source"][1] + len(atoms_el),
     ]
 
     for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # source
-        new_coordinates.append((atom, x, y, z))
-    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # source
-        x += max(X_el) + bond_lenght
         new_coordinates.append((atom, x, y, z))
 
     for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # drain
         x += offset + cell_x
-        new_coordinates.append((atom, x, y, z))
-    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # drain
-        x += offset + cell_x + max(X_el) + bond_lenght
         new_coordinates.append((atom, x, y, z))
 
     with open(str(out_path), "w") as file:
@@ -110,22 +104,23 @@ def generate_electrode(
 
 
 if __name__ == "__main__":
-    # get_electrode(
-    #     Path("/home/tommaso/git_workspace/AutoDFTB/tmp/electrode.xyz"),
-    #     x_len=2,
-    #     y_len=8,
-    #     sheet=False,
-    # )
+    get_electrode(
+        Path("/home/tommaso/git_workspace/AutoDFTB/pecchia/electrode.xyz"),
+        x_len=3,
+        y_len=8,
+        sheet=False,
+    )
     # flessibile(Path("/home/tommaso/git_workspace/AutoDFTB/tmp/electrode.xyz"))
-    # xyz_path = Path("/home/tommaso/git_workspace/AutoDFTB/tmp/graphene_416_fixed_e.xyz")
+    # main(xyz_path.with_suffix(".POSCAR"))
+    generate_electrode(
+        Path("/home/tommaso/git_workspace/AutoDFTB/pecchia/device.xyz"),
+        Path("/home/tommaso/git_workspace/AutoDFTB/pecchia/device_e.xyz"),
+        Path("/home/tommaso/git_workspace/AutoDFTB/pecchia/electrode.xyz"),
+        cell_x=34.43317005,
+    )
+    # xyz_path = Path("/home/tommaso/git_workspace/AutoDFTB/tmp/test/device_e.xyz")
     # xyz_to_poscar(
     #     xyz_path,
     #     poscar_file=xyz_path.with_suffix(".POSCAR"),
-    #     default_box_size=[34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0],
+    #     default_box_size=[4.919024293495611, 0.0, 0.0, 0.0, 8.52, 0.0, 0.0, 0.0, 10.0],
     # )
-    # main(xyz_path.with_suffix(".POSCAR"))
-    generate_electrode(
-        Path("/home/tommaso/git_workspace/AutoDFTB/tmp/graphene_416_fixed.xyz"),
-        Path("/home/tommaso/git_workspace/AutoDFTB/tmp/graphene_416_fixed_e.xyz"),
-        Path("/home/tommaso/git_workspace/AutoDFTB/tmp/electrode_sx.xyz"),
-    )
