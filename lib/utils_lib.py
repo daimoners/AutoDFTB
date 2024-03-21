@@ -388,6 +388,67 @@ def get_gen_data(file_path: Path) -> list[str]:
     return atom_list
 
 
+def xyz2gen(
+    xyz_path: Path,
+    out_path: Path = None,
+    cell: list = [100.0, 100.0, 100.0],
+    supercell: bool = True,
+):
+    if not xyz_path.is_file() or not xyz_path.suffix.lower() == ".xyz":
+        raise Exception(f"File {str(xyz_path)} not found!")
+
+    if not out_path:
+        out_path = xyz_path.with_suffix(".gen")
+
+    aa = cell[0]
+    bb = cell[1]
+    cc = cell[2]
+
+    with open(str(xyz_path), "r") as FPin:
+        natm = int(FPin.readline().strip())
+        FPin.readline()  # skip the second line
+
+        atm = []
+        isp = {}
+        x = []
+        y = []
+        z = []
+
+        for i in range(natm):
+            line = FPin.readline().split()
+            atm_symbol = line[0]
+            atm.append(atm_symbol)
+            x_coord, y_coord, z_coord = map(float, line[1:])
+            x.append(x_coord)
+            y.append(y_coord)
+            z.append(z_coord)
+            if atm_symbol not in isp:
+                isp[atm_symbol] = len(isp) + 1
+
+    with open(str(out_path), "w") as output:
+        if supercell:
+            output.write(f" {natm} {'S'}\n")
+        else:
+            output.write(f" {natm} {'C'}\n")
+
+        unique_atoms = set(atm)
+        output.write(" ")
+        for atom in unique_atoms:
+            output.write(f" {atom}")
+        output.write("\n")
+
+        for i in range(natm):
+            output.write(
+                f"{i + 1} {isp[atm[i]]} {x[i]:18.12f} {y[i]:18.12f} {z[i]:18.12f}\n"
+            )
+
+        if supercell:
+            output.write("0.000000000000 0.0000000000000 0.0000000000000\n")
+            output.write(f"{aa:18.12f} 0.000000000000 0.0000000000000\n")
+            output.write(f"0.000000000000 {bb:18.12f} 0.0000000000000\n")
+            output.write(f"0.000000000000 0.0000000000000 {cc:18.12f}\n")
+
+
 if __name__ == "__main__":
     # slakos = Path('/home/mario/app/dftbplus/slakos/pbc-0-3')
     # in_file = Path('/home/mario/AutoDFTB/graphene_68.POSCAR')
