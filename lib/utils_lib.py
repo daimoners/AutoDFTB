@@ -2,6 +2,9 @@ try:
     from pathlib import Path
     import re
     from collections import OrderedDict
+    import json
+    import os
+    import subprocess
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -447,6 +450,93 @@ def xyz2gen(
             output.write(f"{aa:18.12f} 0.000000000000 0.0000000000000\n")
             output.write(f"0.000000000000 {bb:18.12f} 0.0000000000000\n")
             output.write(f"0.000000000000 0.0000000000000 {cc:18.12f}\n")
+
+
+def get_cell_from_gen(file_path: Path, json_output_path: Path = None):
+
+    if file_path.suffix.lower() != ".gen":
+        raise Exception(f"Wrong file format for {file_path}!")
+
+    with open(str(file_path), "r") as f:
+        lines = f.readlines()
+
+    match = re.match(
+        r"^\s{4}(\d\.\d{10}E\+\d{2})\s{4}(\d\.\d{10}E\+\d{2})\s{4}(\d\.\d{10}E\+\d{2})$",
+        lines[-3],
+    )
+    if match:
+        a = float(match.group(1))
+
+    match = re.match(
+        r"^\s{4}(\d\.\d{10}E\+\d{2})\s{4}(\d\.\d{10}E\+\d{2})\s{4}(\d\.\d{10}E\+\d{2})$",
+        lines[-2],
+    )
+    if match:
+        b = float(match.group(2))
+
+    match = re.match(
+        r"^\s{4}(\d\.\d{10}E\+\d{2})\s{4}(\d\.\d{10}E\+\d{2})\s{4}(\d\.\d{10}E\+\d{2})$",
+        lines[-1],
+    )
+    if match:
+        c = float(match.group(3))
+
+    if json_output_path is not None:
+        dict = {
+            "file_name": file_path.stem,
+            "cell": [a, 0.0, 0.0, 0.0, b, 0.0, 0.0, 0.0, c],
+        }
+        with open(str(json_output_path), "w") as f:
+            json.dump(dict, f, indent=4)
+
+    return [a, 0.0, 0.0, 0.0, b, 0.0, 0.0, 0.0, c]
+
+
+def launch_bin(
+    bin_path: Path,
+    working_dir: Path,
+    verbose: bool = True,
+    write_out_file: Path = None,
+):
+    os.chdir(str(working_dir))
+    if write_out_file is None:
+        process = subprocess.Popen(
+            [str(bin_path)],
+            shell=True,
+            stdout=subprocess.PIPE if not verbose else None,
+            stderr=subprocess.PIPE if not verbose else None,
+        )
+        process.wait()
+    else:
+        with open(str(write_out_file), "w") as output_file:
+            process = subprocess.Popen(
+                [str(bin_path)],
+                shell=True,
+                stdout=output_file,
+                stderr=subprocess.PIPE if not verbose else None,
+            )
+            process.wait()
+    os.chdir(str(Path().resolve()))
+
+
+def check_dir(dir_path: Path | list[Path]):
+    if isinstance(dir_path, list):
+        for dir in dir_path:
+            if not dir.is_dir():
+                raise Exception(f"{dir} it's not a directory or it doesn't exist")
+    elif isinstance(dir_path, Path):
+        if not dir_path.is_dir():
+            raise Exception(f"{dir_path} it's not a directory or it doesn't exist")
+
+
+def check_file(file_path: Path | list[Path]):
+    if isinstance(file_path, list):
+        for file in file_path:
+            if not file.is_file():
+                raise Exception(f"{file} it's not a file or it doesn't exist")
+    elif isinstance(file_path, Path):
+        if not file_path.is_file():
+            raise Exception(f"{file_path} it's not a file or it doesn't exist")
 
 
 if __name__ == "__main__":

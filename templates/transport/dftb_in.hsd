@@ -1,0 +1,78 @@
+
+Geometry = GenFormat {
+    <<< 'processed.gen' 
+}
+
+Transport{
+    Device{
+    FirstLayerAtoms={  1 62 121 183 223 259 303 }
+    AtomRange= 1 384
+  }
+    Contact{
+    Id = "source"
+    AtomRange= 385 512
+  
+    FermiLevel [eV] = -4.62
+    Potential [eV] = 0.05
+}
+    Contact{
+    Id = "drain"
+    AtomRange= 513 640
+  
+    FermiLevel [eV] = -4.62
+    Potential [eV] = -0.05
+}
+}
+        
+Driver = {}
+Hamiltonian = DFTB {
+    Scc = No 
+    SlaterKosterFiles = Type2FileNames {
+        Prefix = '/home/tommaso/Applications/dftbplus/slakos/pbc-0-3/'
+        Separator = "-"
+        Suffix = ".skf"
+    }
+
+    MaxAngularMomentum {
+	C = 'p'
+
+    }
+    Filling = Fermi {
+        Temperature [K] = 0.0
+    }
+
+    KPointsAndWeights = SupercellFolding {
+        1 0 0
+        0 1 0
+        0 0 1
+        0.0 0.0 0.0
+    }
+
+    TruncateSKRange = {
+    SKMaxDistance =   9.4486
+    HardCutoff = Yes
+}
+    Solver = TransportOnly{}
+        
+}
+
+Analysis{
+    TunnelingAndDOS{
+    verbosity = 100
+    EnergyRange [eV] = -8 -2
+    EnergyStep [eV] = 0.05
+    computeLDOS = Yes
+    }
+}
+                
+Options {
+    WriteDetailedXml = Yes
+    WriteAutotestTag = Yes
+    WriteResultsTag = Yes
+    WriteChargesAsText = Yes
+}
+                
+ParserOptions {
+    ParserVersion = 6
+}
+                

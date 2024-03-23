@@ -6,6 +6,15 @@ test/
 outputs/
 __pycache__/
 tmp/
-*.hsd
 *.out
+*.gen
+*.bin
+*.tag
+*.xml
+*.hsd
+*.json
+*.dat
+*.zip
+!templates/**/*.hsd
 .vscode/
+grafene_perfetto/

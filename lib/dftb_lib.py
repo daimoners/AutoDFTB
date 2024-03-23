@@ -161,7 +161,7 @@ class DFTB:
 
     @property
     def geometry(self):
-        if self.file_name.suffix.lower() == ".POSCAR":
+        if self.file_name.suffix.lower() == ".poscar":
             return (
                 """
 Geometry = VaspFormat {
@@ -201,9 +201,9 @@ Driver = {}\n"""
                 + f"{self.args.max_steps}"
                 + """               
     OutputPrefix =  """
-                + f"opt_{self.file_name.name}"
+                + f"opt_{self.file_name.stem}"
                 + """     
-    Convergence {GradElem = 1E-3}   
+    Convergence {GradElem = 1E-4}   
     }\n"""
             )
 
@@ -222,14 +222,17 @@ Driver = {}\n"""
 
     @property
     def filling(self):
-        return (
-            """
+        if hasattr(self.args, "fermi_temperature"):
+            return (
+                """
     Filling = Fermi {
         Temperature [K] = """
-            + f"{self.args.fermi_temperature}"
-            + """
+                + f"{self.args.fermi_temperature}"
+                + """
     }\n"""
-        )
+            )
+        else:
+            return ""
 
     @property
     def kpoints(self):
@@ -242,7 +245,13 @@ Driver = {}\n"""
     }\n
     """
 
-    def hamiltonian(self, scc: bool = True):
+    def hamiltonian(self):
+        if not hasattr(self.args, "scc") or (
+            hasattr(self.args, "scc") and not self.args.scc
+        ):
+            scc = False
+        elif hasattr(self.args, "scc") and self.args.scc:
+            scc = True
         return (
             """Hamiltonian = DFTB {
     Scc = """
@@ -262,9 +271,13 @@ Driver = {}\n"""
 
     @property
     def truncateskrange(self):
-        if not hasattr(self, "components"):
-            self.components = extract_transport_components(self.args.transport_file)
-        return self.components["truncateskrange"]
+        try:
+            if not hasattr(self, "components"):
+                self.components = extract_transport_components(self.args.transport_file)
+            return self.components["truncateskrange"]
+        except:
+            print("Warining truncateskrange block skipped!")
+            return ""
 
     @property
     def solver(self):
@@ -426,7 +439,7 @@ def prepare_contact_input(
             input_contact.geometry
             + input_contact.get_transport_properties(contact=contact)
             + input_contact.driver
-            + input_contact.hamiltonian(scc=False)
+            + input_contact.hamiltonian()
             + input_contact.options
             + input_contact.parseroptions
         )
@@ -447,7 +460,7 @@ def prepare_transport_input(
             input_transport.geometry
             + input_transport.get_transport_properties(components=components)
             + input_transport.driver
-            + input_transport.hamiltonian(scc=False)
+            + input_transport.hamiltonian()
             + input_transport.analysis
             + input_transport.options
             + input_transport.parseroptions

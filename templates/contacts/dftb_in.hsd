@@ -1,0 +1,64 @@
+
+Geometry = GenFormat {
+    <<< 'processed.gen' 
+}
+
+Transport{
+    Device{
+    FirstLayerAtoms={  1 62 121 183 223 259 303 }
+    AtomRange= 1 384
+  }
+    Contact{
+    Id = "source"
+    AtomRange= 385 512
+  }
+    Contact{
+    Id = "drain"
+    AtomRange= 513 640
+  }
+    Task = ContactHamiltonian {
+        contactId = 'drain'   #you have to run this simulation firstly with a contact (e.g. drain), then with the other contact (e.g. source)
+    }
+}
+        
+Driver = {}
+Hamiltonian = DFTB {
+    Scc = No 
+    SlaterKosterFiles = Type2FileNames {
+        Prefix = '/home/tommaso/Applications/dftbplus/slakos/pbc-0-3/'
+        Separator = "-"
+        Suffix = ".skf"
+    }
+
+    MaxAngularMomentum {
+	C = 'p'
+
+    }
+    Filling = Fermi {
+        Temperature [K] = 0.0
+    }
+
+    KPointsAndWeights = SupercellFolding {
+        1 0 0
+        0 1 0
+        0 0 1
+        0.0 0.0 0.0
+    }
+
+    TruncateSKRange = {
+    SKMaxDistance =   9.4486
+    HardCutoff = Yes
+}
+    Solver = DivideAndConquer{}
+        
+}
+
+Options {
+    WriteDetailedXml = Yes
+    WriteAutotestTag = Yes
+}
+                
+ParserOptions {
+    ParserVersion = 6
+}
+                

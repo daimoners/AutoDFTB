@@ -5,6 +5,7 @@ try:
     import math
     from icecream import ic
     import json
+    import re
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -68,7 +69,7 @@ def check_interface_num_atoms(
     delta: float = 1.88,
     bond_lenght: float = 1.42,
 ):
-    num_atoms = int(cell_y / (3 / 2 * bond_lenght)) * 2
+    num_atoms = round(cell_y / (3 / 2 * bond_lenght)) * 2
     atoms, X, Y, Z = read_from_xyz_file(file_path)
 
     x_left = [x for x in X if min(X) <= x <= min(X) + delta]
@@ -78,7 +79,7 @@ def check_interface_num_atoms(
         return True
     else:
         ic(
-            f"Warning, {file_path.name} failed check interface atom counts and will be deleted!"
+            f"Warning, {file_path.name} failed check interface atom counts ({len(x_left)}!={len(x_right)}!={num_atoms}) and will be deleted!"
         )
         return False
 
@@ -137,9 +138,10 @@ def generate_electrode(
     file_path: Path,
     out_path: Path,
     electrode_path: Path,
-    cell_x: float = 34.43317005,
+    cell: float = [34.43317005446928, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0],
     bond_lenght: float = 1.42,
 ):
+    cell_x = cell[0]
 
     atoms_el, X_el, Y_el, Z_el = read_from_xyz_file(electrode_path)
 
@@ -162,6 +164,7 @@ def generate_electrode(
         atom_range["source"][1] + 1,
         atom_range["source"][1] + len(atoms_el),
     ]
+    atom_range["cell"] = cell
 
     for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # source
         new_coordinates.append((atom, x, y, z))
@@ -178,6 +181,23 @@ def generate_electrode(
 
     with open(str(out_path.with_suffix(".json")), "w") as f:
         json.dump(atom_range, f, indent=4)
+
+
+def check_geometry_convergence(slurm_out: Path):
+    if not slurm_out.exists():
+        raise FileNotFoundError
+
+    files = [f for f in slurm_out.iterdir() if f.suffix.lower() == ".out"]
+
+    found = False
+
+    with open(str(files[0]), "r") as file:
+        for line in file:
+            match = re.search("Geometry converged", line)
+            if match:
+                found = True
+
+    return found
 
 
 if __name__ == "__main__":

@@ -2,45 +2,31 @@
 package_path: /home/tommaso/git_workspace/AutoDFTB
 dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
 slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3/
-setupgeom_bin_path: /home/tommaso/Applications/dftbplus/bin/setupgeom
 working_dir: ${package_path}/tmp
 
-xyz_dir: ${package_path}/data/test_transport/xyz_files
+xyz_dir: ${package_path}/data/dftb/xyz_files
 xyz_dir_fixed: ${package_path}/data/test_transport/xyz_files_fixed
 electrodes_dir: ${package_path}/data/test_transport/electrodes
-gen_dir: ${package_path}/data/test_transport/gen_files
 
 # BOX SIZE
 periodic: True
-default_box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
-box_size: [50.0, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 40.0]
+box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
 bond_lenght: 1.42
 delta_x: 0.4
 delta_y: 0.4
 delta_interface: 1.88
-remove_fixeds_when_finished: False
+
+#DFTB for Geometry Optimization
+optimize_geometry: True
+max_steps: 200
 
 # ELECTRODE
 x_len: 2
 y_len: 8
 type: armchair
 
-#SETUPGEOM
-plsdefined: 1
-
-#CONTACT
-fermi_temperature: 0.0
-
-#TRANSPORT
-potential_source: 0.05
-potential_drain: -0.05
-tunnelinganddos:
-  verbosity: 100
-  energy_step: 0.05
-  compute_ldos: "Yes"
-
 # SLURM
-slurm_job_name: Graphene_Transport
+slurm_job_name: Graphene_Electrodes
 slurm_mem:
 slurm_ncpus: 16
 slurm_nodelist:

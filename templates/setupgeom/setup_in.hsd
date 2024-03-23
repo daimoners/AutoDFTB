@@ -1,0 +1,23 @@
+Geometry = GenFormat {
+    <<< 'graphene_416_fixed_e.gen' 
+}
+Transport {
+    Contact {
+        Id = 'source'
+        Atoms = {385:448}
+        ContactVector [Angstrom] = 4.91 0.0 0.0 #questo 4.91 e' la cell lungo x del lattice del solo elettrodo
+        PLsDefined = 1
+    }
+    Contact {
+        Id = 'drain'
+        Atoms = {449:512}
+        ContactVector [Angstrom] = 4.91 0.0 0.0
+        PLsDefined = 1
+    }
+    Task = SetupGeometry{
+        TruncateSKRange{
+            SKMaxDistance [AA] = 5.0
+            HardCutOff = Yes
+        }
+    }
+}
