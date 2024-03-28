@@ -16,6 +16,7 @@ try:
     from omegaconf import open_dict
     import submitit
     import json
+    import pandas as pd
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -121,6 +122,7 @@ def transport(args):
         data = json.load(f)
 
     with open_dict(args):
+        args.atoms_device = data["device"]
         args.atoms_source = data["source"]
         args.atoms_drain = data["drain"]
         args.contact_vector = [
@@ -237,6 +239,30 @@ def transport(args):
         transport_working_dir.joinpath(f"{file.stem}.json"),
         transport_output.joinpath(f"{file.stem}.json"),
     )
+
+    regions = [
+        f
+        for f in transport_working_dir.iterdir()
+        if (f.suffix.lower() == ".dat" and f.stem.lower().startswith("region"))
+    ]
+    combined_data = pd.DataFrame(columns=["file_name", "energy", "states"])
+    for region in tqdm(regions):
+
+        temp_df = pd.read_csv(
+            region,
+            sep="\s+",
+            skiprows=1,
+            names=["energy", "states"],
+        )
+
+        temp_df["file_name"] = region.stem
+
+        combined_data = pd.concat([combined_data, temp_df], ignore_index=True)
+
+    combined_data.to_csv(
+        transport_output.joinpath(f"{file.stem}_regions.csv"), index=False
+    )
+
     shutil.rmtree(transport_working_dir)
     shutil.rmtree(setupgeom_working_dir)
     shutil.rmtree(contact_working_dir)

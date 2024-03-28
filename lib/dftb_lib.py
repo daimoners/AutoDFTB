@@ -359,8 +359,14 @@ Analysis{
     EnergyStep [eV] = """
                 + f"{self.args.tunnelinganddos.energy_step}"
                 + """
-    computeLDOS = """
-                + f"{self.args.tunnelinganddos.compute_ldos}"
+    """
+                + (
+                    self.generate_region_string(
+                        self.args.atoms_device[0], self.args.atoms_device[1]
+                    )
+                    if self.args.tunnelinganddos.compute_regions
+                    else ""
+                )
                 + """
     }
 }
@@ -422,6 +428,13 @@ Transport{
                 + """
 }\n        """
             )
+
+    @staticmethod
+    def generate_region_string(start, end):
+        region_string = ""
+        for i in range(start, end + 1):
+            region_string += f"Region {{\n  Atoms = {i}\n}}\n"
+        return region_string
 
 
 def prepare_dftbplus_input(

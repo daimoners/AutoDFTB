@@ -30,7 +30,7 @@ tunnelinganddos:
   verbosity: 100
   offset_energy_range: 0.5
   resolution: 350
-  compute_ldos: "Yes"
+  compute_regions: True
 
 # SLURM
 slurm_job_name: Graphene_Transport
