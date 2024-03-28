@@ -5,9 +5,39 @@ try:
     import json
     import os
     import subprocess
+    import numpy as np
+    from tqdm import tqdm
+    import math
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
+
+
+def read_from_xyz_file(file_path: Path):
+    """Read xyz files and return lists of x,y,z coordinates and atoms"""
+
+    X = []
+    Y = []
+    Z = []
+    atoms = []
+
+    with open(str(file_path), "r") as f:
+        num_atom = int(next(f))
+        next(f)  # ignore the comment
+
+        for _ in range(num_atom):
+            l = next(f).split()
+            if len(l) == 4 or len(l) == 5:
+                X.append(float(l[1]))
+                Y.append(float(l[2]))
+                Z.append(float(l[3]))
+                atoms.append(str(l[0]))
+
+    X = np.asarray(X)
+    Y = np.asarray(Y)
+    Z = np.asarray(Z)
+
+    return atoms, X, Y, Z
 
 
 def get_total_electrons(file: Path):
@@ -537,6 +567,73 @@ def check_file(file_path: Path | list[Path]):
     elif isinstance(file_path, Path):
         if not file_path.is_file():
             raise Exception(f"{file_path} it's not a file or it doesn't exist")
+
+
+def translate_xyz_file(
+    file_path: Path,
+    out_path: Path = None,
+    x_offset: float = 0.0,
+    y_offset: float = 0.0,
+    z_offset: float = 0.0,
+):
+    if file_path.suffix.lower() != ".xyz":
+        raise Exception(f"Wrong suffix for file {file_path.name}!")
+    if out_path is None:
+        out_path = file_path
+
+    atoms, X, Y, Z = read_from_xyz_file(file_path)
+
+    new_coordinates = []
+    for atom, x, y, z in zip(atoms, X, Y, Z):  # device
+        x += x_offset
+        y += y_offset
+        z += z_offset
+        new_coordinates.append((atom, x, y, z))
+
+    with open(str(out_path), "w") as file:
+        file.write(f"{len(new_coordinates)}\n")
+        file.write("Atoms\n")
+        for atom, x, y, z in new_coordinates:
+            file.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
+
+
+def move_xyz_to_origin(file_path: Path, out_path: Path = None):
+    if file_path.suffix.lower() != ".xyz":
+        raise Exception(f"Wrong suffix for file {file_path.name}!")
+    if out_path is None:
+        out_path = file_path
+
+    new_coordinates = []
+
+    atoms, X, Y, Z = read_from_xyz_file(file_path)
+    offset_x = np.min(X)
+    offset_y = np.min(Y)
+    for atom, x, y, z in zip(atoms, X, Y, Z):  # device
+        x += -offset_x
+        y += -offset_y
+        new_coordinates.append((atom, x, y, z))
+
+    with open(str(out_path), "w") as file:
+        file.write(f"{len(new_coordinates)}\n")
+        file.write("Atoms\n")
+        for atom, x, y, z in new_coordinates:
+            file.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
+
+
+def get_current_value(file_path: Path, json_file: Path = None):
+    with open(str(file_path), "r") as f:
+        lines = f.readlines()
+
+    for line in lines:
+        match = re.findall(
+            r"current\:\s+(\d\.\d+E\S\d*)\sA",
+            line,
+        )
+        if len(match) == 1:
+            current = float(match[0])
+            break
+
+    return current
 
 
 if __name__ == "__main__":

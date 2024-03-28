@@ -1,16 +1,16 @@
 # PATHS
 package_path: /home/tommaso/git_workspace/AutoDFTB
 dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
-slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3/
+slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
 working_dir: ${package_path}/tmp
 
-xyz_dir: ${package_path}/data/dftb/xyz_files
-xyz_dir_fixed: ${package_path}/data/test_transport/xyz_files_fixed
-electrodes_dir: ${package_path}/data/test_transport/electrodes
+xyz_dir: ${package_path}/data/transport/xyz_files
+xyz_dir_fixed: ${package_path}/data/transport/xyz_files_fixed
+electrodes_dir: ${package_path}/data/transport/electrodes
 
 # BOX SIZE
 periodic: True
-box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
+box_size: [34.61819255, 0.0, 0.0, 0.0, 34.25591181, 0.0, 0.0, 0.0, 10.0]
 bond_lenght: 1.42
 delta_x: 0.4
 delta_y: 0.4
@@ -18,12 +18,14 @@ delta_interface: 1.88
 
 #DFTB for Geometry Optimization
 optimize_geometry: True
+optimize_lattice: False
 max_steps: 200
+remove_if_not_converged: True
 
 # ELECTRODE
-x_len: 2
-y_len: 8
-type: armchair
+electrode_path: /home/tommaso/git_workspace/AutoDFTB/grafene_perfetto/cut_electrod/electrod.xyz
+electrode_cell:
+  [4.9390060733739025, 0.0, 0.0, 0.0, 34.25591181, 0.0, 0.0, 0.0, 10.0]
 
 # SLURM
 slurm_job_name: Graphene_Electrodes

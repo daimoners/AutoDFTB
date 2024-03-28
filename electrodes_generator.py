@@ -4,12 +4,18 @@ try:
         generate_electrode,
         adjust_outliers_atoms,
         check_interface_num_atoms,
-        get_electrode,
         check_geometry_convergence,
     )
     from lib.dftb_lib import prepare_dftbplus_input
     from lib.poscar_lib import xyz_to_poscar
-    from lib.utils_lib import get_cell_from_gen, launch_bin, check_dir, check_file
+    from lib.utils_lib import (
+        get_cell_from_gen,
+        launch_bin,
+        check_dir,
+        check_file,
+        translate_xyz_file,
+        move_xyz_to_origin,
+    )
     import hydra
     from tqdm import tqdm
     import os
@@ -85,23 +91,15 @@ def generate_transport_devices(args):
     fixed_path.mkdir(exist_ok=True, parents=True)
     electrodes_path = Path(args.electrodes_dir)
     electrodes_path.mkdir(exist_ok=True, parents=True)
-    box_size = args.box_size
+    box_size = list(args.box_size)
     bond_lenght = args.bond_lenght
     delta_x = args.delta_x
     delta_y = args.delta_y
     delta_interface = args.delta_interface
-    x_len = args.x_len
-    y_len = args.y_len
-    type = args.type
+    electrode_path = args.electrode_path
+    electrode_cell = args.electrode_cell
 
-    adjust_outliers_atoms(
-        file,
-        working_dir.joinpath(f"{file.stem}_fixed.xyz"),
-        cell_x=box_size[0],
-        cell_y=box_size[4],
-        delta_x=delta_x,
-        delta_y=delta_y,
-    )
+    shutil.copy(file, working_dir.joinpath(f"{file.stem}_fixed.xyz"))
 
     xyz_to_poscar(
         working_dir.joinpath(f"{file.stem}_fixed.xyz"),
@@ -114,15 +112,31 @@ def generate_transport_devices(args):
         working_dir.joinpath(f"opt_{file.stem}_fixed.xyz"),
         fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
     )
-    box_size = get_cell_from_gen(
+    get_cell_from_gen(
         working_dir.joinpath(f"opt_{file.stem}_fixed.gen"),
+        json_output_path=fixed_path.joinpath(f"{file.stem}_fixed.json"),
     )
     if not check_geometry_convergence(
         Path(args.package_path).joinpath(args.slurm_output, file.stem)
     ):
         print(f"Warning, Geometry did NOT converge for {file.stem}!")
-        # os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.xyz")))
-        # return
+        if args.remove_if_not_converged:
+            os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.xyz")))
+            os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.json")))
+            shutil.rmtree(working_dir)
+            return
+
+    translate_xyz_file(fixed_path.joinpath(f"{file.stem}_fixed.xyz"), z_offset=-5.0)
+    move_xyz_to_origin(fixed_path.joinpath(f"{file.stem}_fixed.xyz"))
+
+    adjust_outliers_atoms(
+        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
+        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
+        cell_x=box_size[0],
+        cell_y=box_size[4],
+        delta_x=delta_x,
+        delta_y=delta_y,
+    )
 
     if not check_interface_num_atoms(
         fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
@@ -131,22 +145,16 @@ def generate_transport_devices(args):
         bond_lenght=bond_lenght,
     ):
         os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.xyz")))
+        os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.json")))
+        shutil.rmtree(working_dir)
         return
-
-    if not electrodes_path.joinpath("electrod.xyz").is_file():
-        get_electrode(
-            electrodes_path.joinpath("electrod.xyz"),
-            x_len=x_len,
-            y_len=y_len,
-            type=type,
-        )
 
     generate_electrode(
         fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
         electrodes_path.joinpath(f"{file.stem}_e.xyz"),
-        electrodes_path.joinpath("electrod.xyz"),
+        Path(electrode_path),
         cell=box_size,
-        bond_lenght=bond_lenght,
+        contact_vector=float(electrode_cell[0]),
     )
     shutil.rmtree(working_dir)
 

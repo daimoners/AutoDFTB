@@ -191,21 +191,40 @@ Driver = {}\n"""
             return """
 Driver = {}\n"""
         else:
-            return (
-                """Driver = GeometryOptimization {
+            if self.args.optimize_lattice:
+                return (
+                    """Driver = GeometryOptimization {
     Optimizer = Rational {}
-    LatticeOpt = Yes
+    LatticeOpt = """
+                    + ("Yes" if self.args.optimize_lattice else "No")
+                    + """
     FixAngles = Yes
-    FixLengths = No No Yes
+    FixLengths = """
+                    + ("No No Yes" if self.args.optimize_lattice else "Yes Yes Yes")
+                    + """
     MaxSteps = """
-                + f"{self.args.max_steps}"
-                + """               
+                    + f"{self.args.max_steps}"
+                    + """               
     OutputPrefix =  """
-                + f"opt_{self.file_name.stem}"
-                + """     
+                    + f"opt_{self.file_name.stem}"
+                    + """     
     Convergence {GradElem = 1E-4}   
     }\n"""
-            )
+                )
+            else:
+                return (
+                    """Driver = GeometryOptimization {
+    Optimizer = Rational {}
+    LatticeOpt = No
+    MaxSteps = """
+                    + f"{self.args.max_steps}"
+                    + """               
+    OutputPrefix =  """
+                    + f"opt_{self.file_name.stem}"
+                    + """     
+    Convergence {GradElem = 1E-4}   
+    }\n"""
+                )
 
     @property
     def slaterkosterfiles(self):

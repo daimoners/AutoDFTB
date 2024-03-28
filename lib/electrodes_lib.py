@@ -84,7 +84,7 @@ def check_interface_num_atoms(
         return False
 
 
-def get_electrode(
+def get_electrode(  #! DEPRECATED
     out_path: Path,
     x_len: int = 3,
     y_len: int = 8,
@@ -133,26 +133,41 @@ def get_electrode(
     )  # Example rotation matrix (90 degree rotation around y-axis)
     rotate_structure(out_path, out_path, rotation_matrix)
 
+    with open(str(out_path), "r") as file:
+        for line in file:
+            match = re.search(r'^Lattice="(\d\.\d+)\s', line)
+            if match:
+                data = {"contact_vector": match.group(1)}
+                with open(str(out_path.with_suffix(".json")), "w") as f:
+                    json.dump(data, f)
+                return float(data["contact_vector"])
+
 
 def generate_electrode(
     file_path: Path,
     out_path: Path,
     electrode_path: Path,
     cell: float = [34.43317005446928, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0],
-    bond_lenght: float = 1.42,
+    contact_vector: float = 4.919024293495611,
+    json_file: Path = None,
 ):
     cell_x = cell[0]
 
     atoms_el, X_el, Y_el, Z_el = read_from_xyz_file(electrode_path)
-
-    offset = max(X_el) + bond_lenght * math.cos(math.pi / 6)
 
     atom_range = {}
     new_coordinates = []
 
     atoms, X, Y, Z = read_from_xyz_file(file_path)
     for atom, x, y, z in zip(atoms, X, Y, Z):  # device
-        x += offset
+        x += contact_vector
+        new_coordinates.append((atom, x, y, z))
+
+    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # source
+        new_coordinates.append((atom, x, y, z))
+
+    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # drain
+        x += contact_vector + cell_x
         new_coordinates.append((atom, x, y, z))
 
     atom_range["device"] = [1, len(atoms)]
@@ -165,22 +180,26 @@ def generate_electrode(
         atom_range["source"][1] + len(atoms_el),
     ]
     atom_range["cell"] = cell
+    atom_range["contact_vector"] = contact_vector
+    atom_range["file_name"] = file_path.stem
 
-    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # source
-        new_coordinates.append((atom, x, y, z))
+    if json_file is None:
+        with open(str(out_path), "w") as file:
+            file.write(f"{len(new_coordinates)}\n")
+            file.write("Atoms\n")
+            for atom, x, y, z in new_coordinates:
+                file.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
 
-    for atom, x, y, z in zip(atoms_el, X_el, Y_el, Z_el):  # drain
-        x += offset + cell_x
-        new_coordinates.append((atom, x, y, z))
+        with open(str(out_path.with_suffix(".json")), "w") as f:
+            json.dump(atom_range, f, indent=4)
+    else:
+        with open(str(json_file), "r") as f:
+            data = json.load(f)
 
-    with open(str(out_path), "w") as file:
-        file.write(f"{len(new_coordinates)}\n")
-        file.write("Atoms\n")
-        for atom, x, y, z in new_coordinates:
-            file.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
+        data.update(atom_range)
 
-    with open(str(out_path.with_suffix(".json")), "w") as f:
-        json.dump(atom_range, f, indent=4)
+        with open(str(json_file), "w") as f:
+            json.dump(data, f, indent=4)
 
 
 def check_geometry_convergence(slurm_out: Path):
@@ -198,6 +217,35 @@ def check_geometry_convergence(slurm_out: Path):
                 found = True
 
     return found
+
+
+def cut_electrode(file_path: Path, out_path: Path, x_th: float):
+    atoms, X, Y, Z = read_from_xyz_file(file_path)
+
+    new_coordinates = []
+    for atom, x, y, z in zip(atoms, X, Y, Z):
+        if x < x_th:
+            new_coordinates.append((atom, x, y, z))
+
+    with open(str(out_path), "w") as file:
+        file.write(f"{len(new_coordinates)}\n")
+        file.write("Atoms\n")
+        for atom, x, y, z in new_coordinates:
+            file.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
+
+
+def get_electrode_cell(
+    electrod_path: Path, original_cell: list, bond_lenght: float = 1.42
+):
+    atoms, X, Y, Z = read_from_xyz_file(electrod_path)
+
+    y_cell = original_cell[4]
+    x_cell = np.max(X) + bond_lenght * math.cos(math.pi / 6)
+
+    data = {"cell": [x_cell, 0.0, 0.0, 0.0, y_cell, 0.0, 0.0, 0.0, 10.0]}
+
+    with open(str(electrod_path.with_suffix(".json")), "w") as f:
+        json.dump(data, f, indent=4)
 
 
 if __name__ == "__main__":

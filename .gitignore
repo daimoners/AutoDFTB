@@ -15,6 +15,7 @@ tmp/
 *.json
 *.dat
 *.zip
-!templates/**/*.hsd
 .vscode/
 grafene_perfetto/
+!templates/**/*.hsd
+!optimized_perfect_graphene/*

@@ -1,7 +1,7 @@
 # PATHS
 package_path: /home/tommaso/git_workspace/AutoDFTB
 dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
-slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3/
+slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
 xyz_dir: ${package_path}/data/dftb/xyz_files
 poscar_dir: ${package_path}/data/dftb/poscar_files
 json_dir: ${package_path}/data/dftb/json_files
