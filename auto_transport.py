@@ -232,9 +232,12 @@ def transport(args):
         "energy_range": list(args.tunnelinganddos.energy_range),
         "energy_step": args.tunnelinganddos.energy_step,
         "fermi_temperature": args.fermi_temperature,
+        "fermi_energy_source": float(fermi_energy_source),
+        "fermi_energy_drain": float(fermi_energy_drain),
     }
 
-    data["LDOS"] = get_regions_dict(transport_working_dir)
+    if args.tunnelinganddos.compute_regions:
+        data["LDOS"] = get_regions_dict(transport_working_dir)
 
     with open(str(transport_working_dir.joinpath(f"{file.stem}.json")), "w") as f:
         json.dump(data, f, indent=4)
@@ -254,7 +257,7 @@ if __name__ == "__main__":
     # dpath = Path("/home/tommaso/git_workspace/AutoDFTB/data/transport/electrodes_test")
     # dpath.mkdir(exist_ok=True, parents=True)
     # files = [f for f in spath.iterdir() if f.suffix.lower() == ".xyz"]
-    # files = sorted(files, key=lambda x: str(x))[:1000]
+    # files = sorted(files, key=lambda x: str(x))[1000:5000]
     # for file in tqdm(files):
     #     shutil.copy(file, dpath.joinpath(file.name))
     #     shutil.copy(file.with_suffix(".json"), dpath.joinpath(f"{file.stem}.json"))

@@ -38,122 +38,6 @@ def extract_transport_components(file_path: Path):
     return components
 
 
-# class DFTB:
-#     def __init__(self, args, file_name: Path):
-#         self.args = args
-#         self.file_name = file_name
-
-#     @property
-#     def geometry(self):
-#         return (
-#             """Geometry = VaspFormat {
-#     <<< """
-#             + f"'{self.file_name.name}'"
-#             + """
-#     }\n"""
-#         )
-
-#     @property
-#     def driver(self):
-#         if not self.args.optimize_geometry:
-#             return """Driver = {}\n"""
-#         else:
-#             return (
-#                 """Driver = GeometryOptimization {
-#     Optimizer = Rational {}
-#     LatticeOpt = Yes
-#     FixAngles = Yes
-#     FixLengths = No No Yes
-#     MaxSteps = """
-#                 + f"{self.args.max_steps}"
-#                 + """
-#     OutputPrefix =  """
-#                 + f"opt_{self.file_name.name}"
-#                 + """
-#     Convergence {GradElem = 1E-3}
-#     }\n"""
-#             )
-
-#     @property
-#     def slaterkosterfiles(self):
-#         return (
-#             """
-#     SlaterKosterFiles = Type2FileNames {
-#         Prefix = """
-#             + f"'{self.args.slakos}/'"
-#             + """
-#         Separator = "-"
-#         Suffix = ".skf"
-#     }\n"""
-#         )
-
-#     @property
-#     def filling(self):
-#         return (
-#             """
-#     Filling = Fermi {
-#         Temperature [K] = """
-#             + f"{self.args.fermi_temperature}"
-#             + """
-#     }\n"""
-#         )
-
-#     @property
-#     def kpoints(self):
-#         return """
-#     KPointsAndWeights = SupercellFolding {
-#         1 0 0
-#         0 1 0
-#         0 0 1
-#         0.5 0.5 0.0
-#     }\n
-#     """
-
-#     @property
-#     def hamiltonian(self):
-#         return (
-#             """Hamiltonian = DFTB {
-#     Scc = Yes """
-#             + f"{self.slaterkosterfiles}"
-#             + f"{_map_angular_momentum(self.file_name)}"
-#             + """
-#     MaxSCCIterations = """
-#             + f"{self.args.max_iterations}"
-#             + """
-#     Charge = """
-#             + f"{self.args.charge}\n"
-#             + f"{self.filling}"
-#             + f"{self.kpoints}"
-#             + """
-# }\n"""
-#         )
-
-#     @property
-#     def options(self):
-#         return """
-# Options {
-#     WriteDetailedXml = Yes
-# }
-#                 """
-
-#     @property
-#     def analysis(self):
-#         return """
-# Analysis {
-#     CalculateForces = Yes
-#     WriteEigenvectors = Yes
-# }
-#                 """
-
-#     @property
-#     def parseroptions(self):
-#         return """
-# ParserOptions {
-#     ParserVersion = 12
-# }
-#                 """
-
-
 class DFTB:
     def __init__(self, args, file_name: Path):
         self.args = args
@@ -195,13 +79,9 @@ Driver = {}\n"""
                 return (
                     """Driver = GeometryOptimization {
     Optimizer = Rational {}
-    LatticeOpt = """
-                    + ("Yes" if self.args.optimize_lattice else "No")
-                    + """
+    LatticeOpt = Yes
     FixAngles = Yes
-    FixLengths = """
-                    + ("No No Yes" if self.args.optimize_lattice else "Yes Yes Yes")
-                    + """
+    FixLengths = No No Yes
     MaxSteps = """
                     + f"{self.args.max_steps}"
                     + """               
