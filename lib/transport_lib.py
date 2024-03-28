@@ -83,5 +83,26 @@ def prepare_setupgeom_input(args, file_name: Path, out_path: Path = None):
     return input_setupgeom
 
 
+def get_regions_dict(regions_path: Path):
+    regions_dict = {}
+
+    files = [
+        f
+        for f in regions_path.iterdir()
+        if (f.suffix.lower() == ".dat" and f.stem.lower().startswith("region"))
+    ]
+    for file in files:
+        with open(str(file), "r") as f:
+            colonne = {"energy": [], "states": []}
+            next(f)  # Salta la prima riga che contiene i nomi delle colonne
+            for riga in f:
+                valori = riga.split()
+                colonne["energy"].append(float(valori[0]))
+                colonne["states"].append(float(valori[1]))
+        regions_dict[f"{file.stem}"] = colonne
+
+    return regions_dict
+
+
 if __name__ == "__main__":
     pass

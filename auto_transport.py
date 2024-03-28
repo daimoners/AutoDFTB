@@ -11,7 +11,7 @@ try:
         check_file,
         get_current_value,
     )
-    from lib.transport_lib import prepare_setupgeom_input
+    from lib.transport_lib import prepare_setupgeom_input, get_regions_dict
     from lib.dftb_lib import prepare_contact_input, prepare_transport_input
     from omegaconf import open_dict
     import submitit
@@ -233,34 +233,14 @@ def transport(args):
         "energy_step": args.tunnelinganddos.energy_step,
         "fermi_temperature": args.fermi_temperature,
     }
+
+    data["LDOS"] = get_regions_dict(transport_working_dir)
+
     with open(str(transport_working_dir.joinpath(f"{file.stem}.json")), "w") as f:
         json.dump(data, f, indent=4)
     shutil.copy(
         transport_working_dir.joinpath(f"{file.stem}.json"),
         transport_output.joinpath(f"{file.stem}.json"),
-    )
-
-    regions = [
-        f
-        for f in transport_working_dir.iterdir()
-        if (f.suffix.lower() == ".dat" and f.stem.lower().startswith("region"))
-    ]
-    combined_data = pd.DataFrame(columns=["file_name", "energy", "states"])
-    for region in tqdm(regions):
-
-        temp_df = pd.read_csv(
-            region,
-            sep="\s+",
-            skiprows=1,
-            names=["energy", "states"],
-        )
-
-        temp_df["file_name"] = region.stem
-
-        combined_data = pd.concat([combined_data, temp_df], ignore_index=True)
-
-    combined_data.to_csv(
-        transport_output.joinpath(f"{file.stem}_regions.csv"), index=False
     )
 
     shutil.rmtree(transport_working_dir)
@@ -270,3 +250,11 @@ def transport(args):
 
 if __name__ == "__main__":
     main()
+    # spath = Path("/home/tommaso/git_workspace/AutoDFTB/data/transport/electrodes")
+    # dpath = Path("/home/tommaso/git_workspace/AutoDFTB/data/transport/electrodes_test")
+    # dpath.mkdir(exist_ok=True, parents=True)
+    # files = [f for f in spath.iterdir() if f.suffix.lower() == ".xyz"]
+    # files = sorted(files, key=lambda x: str(x))[:1000]
+    # for file in tqdm(files):
+    #     shutil.copy(file, dpath.joinpath(file.name))
+    #     shutil.copy(file.with_suffix(".json"), dpath.joinpath(f"{file.stem}.json"))
