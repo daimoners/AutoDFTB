@@ -2,7 +2,7 @@ try:
     from pathlib import Path
     import submitit
     import hydra
-    from tqdm import tqdm
+    from tqdm.rich import tqdm
     from lib.poscar_lib import xyz_to_poscar
     from lib.utils_lib import get_poscar_data, get_results
     from lib.dftb_lib import prepare_dftbplus_input

@@ -3,7 +3,7 @@ try:
     import shutil
     from icecream import ic
     import hydra
-    from tqdm import tqdm
+    from tqdm.rich import tqdm
     from lib.utils_lib import (
         xyz2gen,
         launch_bin,
@@ -16,7 +16,7 @@ try:
     from omegaconf import open_dict
     import submitit
     import json
-    import pandas as pd
+    from lib.stm_lib import StmSimulator
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -49,6 +49,11 @@ def main(args):
         if (not args.periodic and not args.box_size)
         else args.box_size
     )
+    if args.compute_stm:
+        xyz_dir = Path(args.xyz_dir)
+        check_dir(xyz_dir)
+        stm_output = Path(args.stm_output)
+        stm_output.mkdir(exist_ok=True, parents=True)
 
     # === Convert xyz files to gen files === #
     ic("Converting xyz files to gen files...")
@@ -245,6 +250,27 @@ def transport(args):
         transport_working_dir.joinpath(f"{file.stem}.json"),
         transport_output.joinpath(f"{file.stem}.json"),
     )
+
+    # === STM === #
+    if args.compute_stm:
+        xyz_dir = Path(args.xyz_dir)
+        fermi_energy_mean = (float(fermi_energy_source) + float(fermi_energy_drain)) / 2
+        stm = StmSimulator(
+            xyz_path=xyz_dir.joinpath(f"{file.stem[:-2]}_fixed.xyz"),
+            dos_per_atom_path=transport_output.joinpath(f"{file.stem}.json"),
+            fermi_level=fermi_energy_mean,
+            bias=args.bias,
+        )
+        img = stm.get_stm_img(
+            image_res=(args.resolution, args.resolution),
+            tau=args.tau,
+            scan_h=args.scan_h,
+        )
+
+        if args.save_npy:
+            stm.save_npy(img, Path(args.stm_output).joinpath(f"{file.stem}.npy"))
+        if args.save_png:
+            stm.save_png(-img, Path(args.stm_output).joinpath(f"{file.stem}.png"))
 
     shutil.rmtree(transport_working_dir)
     shutil.rmtree(setupgeom_working_dir)

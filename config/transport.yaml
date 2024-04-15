@@ -32,6 +32,17 @@ tunnelinganddos:
   resolution: 350
   compute_regions: True
 
+#STM
+compute_stm: True
+bias: 0.5
+resolution: 640
+tau: 5
+scan_h: 1
+stm_output: ${package_path}/data/transport/stm_images
+xyz_dir: ${package_path}/data/transport/xyz_files_fixed
+save_npy: True
+save_png: True
+
 # SLURM
 slurm_job_name: Graphene_Transport
 slurm_mem:
