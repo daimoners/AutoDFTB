@@ -2,14 +2,14 @@
 package_path: /home/tommaso/git_workspace/AutoDFTB
 dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
 slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
-xyz_dir: ${package_path}/data/dftb/xyz_files
+xyz_dir: ${package_path}/data/dftb/xyz_files_fixed_opt
 poscar_dir: ${package_path}/data/dftb/poscar_files
 json_dir: ${package_path}/data/dftb/json_files
 working_dir: ${package_path}/tmp
 
 # BOX SIZE
 periodic: True
-box_size: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
+box_size: [39.53476932, 0.0, 0.0, 0.0, 34.27629786, 0.0, 0.0, 0.0, 10.0]
 
 # DFTB
 optimize_geometry: False
@@ -19,7 +19,7 @@ max_steps: 100
 fermi_temperature: 1000.0
 
 # SLURM
-slurm_job_name: AutoDFTB+
+slurm_job_name: DFTB_DG
 slurm_mem:
 slurm_ncpus: 16
 slurm_nodelist:

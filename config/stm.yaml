@@ -1,15 +1,15 @@
 # PATHS
 package_path: /home/tommaso/git_workspace/AutoDFTB
 
-xyz_dir: ${package_path}/data/stm/xyz_files
-json_dir: ${package_path}/data/stm/json_files
-out_dir: ${package_path}/data/stm/images_256_tau20
+xyz_dir: ${package_path}/data/new_transport/xyz_files_fixed
+json_dir: ${package_path}/data/new_transport/transport_output
+out_dir: ${package_path}/data/new_transport/stm_images
 
 # STM
-fermi_energy: -4.62
-bias: 0.5
+#fermi_energy: -4.62
+bias: 0.35
 resolution: 256
-tau: 20
+tau: 5
 scan_h: 1
 save_npy: False
 save_png: True

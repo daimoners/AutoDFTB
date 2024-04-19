@@ -4,7 +4,13 @@ try:
     import hydra
     from tqdm.rich import tqdm
     from lib.poscar_lib import xyz_to_poscar
-    from lib.utils_lib import get_poscar_data, get_results
+    from lib.utils_lib import (
+        get_poscar_data,
+        get_results,
+        check_dir,
+        check_file,
+        launch_bin,
+    )
     from lib.dftb_lib import prepare_dftbplus_input
     import shutil
     import os
@@ -25,43 +31,7 @@ class SLURM_AutoDFTB:
         dftb(self.args)
 
 
-def launch_dftb(dftb_bin_path: Path, working_dir: Path, verbose: bool = True):
-    os.chdir(str(working_dir))
-    process = subprocess.Popen(
-        [str(dftb_bin_path)],
-        shell=True,
-        stdout=subprocess.PIPE if not verbose else None,
-        stderr=subprocess.PIPE if not verbose else None,
-    )
-    process.wait()
-    os.chdir(str(Path().resolve()))
-
-
-def clear_working_dir(working_dir: Path):
-    shutil.rmtree(working_dir)
-
-
-def check_dir(dir_path: Path | list[Path]):
-    if isinstance(dir_path, list):
-        for dir in dir_path:
-            if not dir.is_dir():
-                raise Exception(f"{dir} it's not a directory or it doesn't exist")
-    elif isinstance(dir_path, Path):
-        if not dir_path.is_dir():
-            raise Exception(f"{dir_path} it's not a directory or it doesn't exist")
-
-
-def check_file(file_path: Path | list[Path]):
-    if isinstance(file_path, list):
-        for file in file_path:
-            if not file.is_file():
-                raise Exception(f"{file} it's not a file or it doesn't exist")
-    elif isinstance(file_path, Path):
-        if not file_path.is_file():
-            raise Exception(f"{file_path} it's not a file or it doesn't exist")
-
-
-@hydra.main(version_base="1.2", config_path="config", config_name="cfg")
+@hydra.main(version_base="1.2", config_path="config", config_name="dftb")
 def main(args):
     if args.verbose:
         ic.enable()
@@ -95,9 +65,9 @@ def main(args):
             args.working_dir = str(local_working_dir)
             args.file = str(file)
 
-        Path(args.slurm_output).mkdir(parents=True, exist_ok=True)
+        Path(args.slurm_output).joinpath(file.stem).mkdir(parents=True, exist_ok=True)
         executor = submitit.AutoExecutor(
-            folder=args.slurm_output,
+            folder=str(Path(args.slurm_output).joinpath(file.stem)),
             slurm_max_num_timeout=30,
         )
 
@@ -136,7 +106,7 @@ def dftb(args):
     ic(f"Prepare and launch E0 simulation for {file.name}...")
     shutil.copy(file, working_dir.joinpath(file.name))
     prepare_dftbplus_input(args, working_dir.joinpath(file.name))
-    launch_dftb(dftb_bin_path, working_dir, args.verbose)
+    launch_bin(dftb_bin_path, working_dir, args.verbose)
 
     # === Get E0 simulation results === #
     ic(f"Get E0 simulation results for {file.name}...")
@@ -154,7 +124,7 @@ def dftb(args):
     with open_dict(args):
         args.charge = -1
     prepare_dftbplus_input(args, working_dir.joinpath(file.name))
-    launch_dftb(dftb_bin_path, working_dir, args.verbose)
+    launch_bin(dftb_bin_path, working_dir, args.verbose)
 
     # === Get E- simulation results === #
     ic(f"Get E- simulation results for {file.name}...")
@@ -171,7 +141,7 @@ def dftb(args):
     with open_dict(args):
         args.charge = +1
     prepare_dftbplus_input(args, working_dir.joinpath(file.name))
-    launch_dftb(dftb_bin_path, working_dir, args.verbose)
+    launch_bin(dftb_bin_path, working_dir, args.verbose)
 
     # === Get E+ simulation results === #
     ic(f"Get E+ simulation results for {file.name}...")
@@ -196,7 +166,7 @@ def dftb(args):
     )
 
     # === Clear the working directory === #
-    clear_working_dir(working_dir)
+    shutil.rmtree(working_dir)
 
     ic("\nDone\n")
 

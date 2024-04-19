@@ -10,6 +10,7 @@ try:
     import submitit
     from omegaconf import open_dict
     from lib.stm_lib import StmSimulator
+    import json
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -41,7 +42,10 @@ def main(args):
     files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
     for file in tqdm(files):
         check_file(file)
-        check_file(json_dir.joinpath(f"{file.stem[:-6]}_e.json"))
+        try:
+            check_file(json_dir.joinpath(f"{file.stem[:-6]}_e.json"))
+        except:
+            continue
         with open_dict(args):
             args.xyz_file = str(file)
             args.json_file = str(json_dir.joinpath(f"{file.stem[:-6]}_e.json"))
@@ -76,10 +80,17 @@ def generate_stm_images(args):
     xyz_file = Path(args.xyz_file)
     json_file = Path(args.json_file)
 
+    with open(str(json_file), "r") as f:
+        data = json.load(f)
+
+    fermi_energy_source = float(data["fermi_energy_source"])
+    fermi_energy_drain = float(data["fermi_energy_drain"])
+    fermi_energy = (fermi_energy_source + fermi_energy_drain) / 2
+
     stm = StmSimulator(
         xyz_path=xyz_file,
         dos_per_atom_path=json_file,
-        fermi_level=args.fermi_energy,  # TODO la fermi_energy deve essere letta dal singolo json invece che dal config di hydra
+        fermi_level=fermi_energy,
         bias=args.bias,
     )
     img = stm.get_stm_img(
