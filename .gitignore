@@ -1,6 +1,7 @@
 *.xyz
 *.POSCAR
 *.png
+!assets/**/*.png
 data/
 test/
 outputs/
