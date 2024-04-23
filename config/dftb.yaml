@@ -4,7 +4,7 @@ dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
 slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
 xyz_dir: ${package_path}/data/dftb/xyz_files_fixed_opt
 poscar_dir: ${package_path}/data/dftb/poscar_files
-json_dir: ${package_path}/data/dftb/json_files
+json_dir: ${package_path}/data/dftb/json_files_2
 working_dir: ${package_path}/tmp
 
 # BOX SIZE
@@ -17,6 +17,8 @@ charge: 0
 max_iterations: 200
 max_steps: 100
 fermi_temperature: 1000.0
+scc: True
+spin_polarization: True
 
 # SLURM
 slurm_job_name: DFTB_DG

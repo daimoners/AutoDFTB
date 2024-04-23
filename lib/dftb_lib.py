@@ -2,6 +2,7 @@ try:
     from pathlib import Path
     from lib.utils_lib import _map_angular_momentum
     import re
+    from omegaconf import open_dict
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -69,8 +70,11 @@ Geometry = GenFormat {
     @property
     def driver(self):
         if not hasattr(self.args, "optimize_geometry"):
-            return """
-Driver = {}\n"""
+            with open_dict(self.args):
+                self.args.optimize_geometry = False
+        if not hasattr(self.args, "moved_atoms"):
+            with open_dict(self.args):
+                self.args.moved_atoms = False
         if not self.args.optimize_geometry:
             return """
 Driver = {}\n"""
@@ -80,6 +84,13 @@ Driver = {}\n"""
                     """Driver = GeometryOptimization {
     Optimizer = Rational {}
     LatticeOpt = Yes
+    MovedAtoms = """
+                    + (
+                        "1:-1"
+                        if not self.args.moved_atoms
+                        else f"{list(self.args.moved_atoms)[0]}:{list(self.args.moved_atoms)[1]}"
+                    )
+                    + """
     FixAngles = Yes
     FixLengths = No No Yes
     MaxSteps = """
@@ -96,6 +107,13 @@ Driver = {}\n"""
                     """Driver = GeometryOptimization {
     Optimizer = Rational {}
     LatticeOpt = No
+    MovedAtoms = """
+                    + (
+                        "1:-1"
+                        if not self.args.moved_atoms
+                        else f"{list(self.args.moved_atoms)[0]}:{list(self.args.moved_atoms)[1]}"
+                    )
+                    + """
     MaxSteps = """
                     + f"{self.args.max_steps}"
                     + """               
@@ -162,11 +180,31 @@ Driver = {}\n"""
             + f"{self.charge}"
             + f"{self.filling}"
             + f"{self.kpoints}"
+            + f"{self.spin_polarization}"
             + f"{self.truncateskrange}"
             + f"{self.solver}"
             + """
 }\n"""
         )
+
+    @property
+    def spin_polarization(self):
+        if not hasattr(self.args, "spin_polarization"):
+            with open_dict(self.args):
+                self.args.spin_polarization = False
+        if self.args.spin_polarization:
+            return """
+    SpinPolarization = Colinear {
+        RelaxTotalSpin = Yes
+    }
+    SpinConstants = {
+    C = {
+        -0.0227
+        }
+    }
+    """
+        else:
+            return ""
 
     @property
     def truncateskrange(self):
