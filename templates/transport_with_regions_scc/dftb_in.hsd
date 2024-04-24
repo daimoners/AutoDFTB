@@ -1,0 +1,1196 @@
+
+Geometry = GenFormat {
+    <<< 'processed.gen' 
+}
+
+Transport{
+    Device{
+    FirstLayerAtoms={  1 65 129 193 247 280 312 }
+    AtomRange= 1 370
+  }
+    Contact{
+    Id = "source"
+    AtomRange= 371 498
+  
+    FermiLevel [eV] = -4.643692906104269547
+    Potential [eV] = 0.05
+}
+    Contact{
+    Id = "drain"
+    AtomRange= 499 626
+  
+    FermiLevel [eV] = -4.643692906104269547
+    Potential [eV] = -0.05
+}
+Task = UploadContacts {
+  }
+}
+        
+Driver = {}
+Hamiltonian = DFTB {
+    Scc = Yes
+    SccTolerance = 0.1
+    SlaterKosterFiles = Type2FileNames {
+        Prefix = '/home/tommaso/Applications/dftbplus/slakos/pbc-0-3/'
+        Separator = "-"
+        Suffix = ".skf"
+    }
+    MaxSCCIterations = 50
+    MaxAngularMomentum {
+	C = 'p'
+
+    }
+    Filling = Fermi {
+        Temperature [K] = 1000.0
+    }
+
+    KPointsAndWeights = SupercellFolding {
+        1 0 0
+        0 1 0
+        0 0 1
+        0.0 0.0 0.0
+    }
+
+    TruncateSKRange = {
+    SKMaxDistance =   9.4486
+    HardCutoff = Yes
+}
+  Solver = GreensFunction{SaveSurfaceGFs = No}
+    Electrostatics = Poisson {
+      Verbosity = 101
+      MinimalGrid [Angstrom] = 0.5 0.5 0.5
+      SavePotential = Yes
+}
+        
+}
+
+Analysis {
+  TunnelingAndDos {
+    Verbosity = 101
+    EnergyRange [eV] = -5.14  -4.14
+    EnergyStep [eV] = 0.0028
+Region {
+  Atoms = 1
+}
+Region {
+  Atoms = 2
+}
+Region {
+  Atoms = 3
+}
+Region {
+  Atoms = 4
+}
+Region {
+  Atoms = 5
+}
+Region {
+  Atoms = 6
+}
+Region {
+  Atoms = 7
+}
+Region {
+  Atoms = 8
+}
+Region {
+  Atoms = 9
+}
+Region {
+  Atoms = 10
+}
+Region {
+  Atoms = 11
+}
+Region {
+  Atoms = 12
+}
+Region {
+  Atoms = 13
+}
+Region {
+  Atoms = 14
+}
+Region {
+  Atoms = 15
+}
+Region {
+  Atoms = 16
+}
+Region {
+  Atoms = 17
+}
+Region {
+  Atoms = 18
+}
+Region {
+  Atoms = 19
+}
+Region {
+  Atoms = 20
+}
+Region {
+  Atoms = 21
+}
+Region {
+  Atoms = 22
+}
+Region {
+  Atoms = 23
+}
+Region {
+  Atoms = 24
+}
+Region {
+  Atoms = 25
+}
+Region {
+  Atoms = 26
+}
+Region {
+  Atoms = 27
+}
+Region {
+  Atoms = 28
+}
+Region {
+  Atoms = 29
+}
+Region {
+  Atoms = 30
+}
+Region {
+  Atoms = 31
+}
+Region {
+  Atoms = 32
+}
+Region {
+  Atoms = 33
+}
+Region {
+  Atoms = 34
+}
+Region {
+  Atoms = 35
+}
+Region {
+  Atoms = 36
+}
+Region {
+  Atoms = 37
+}
+Region {
+  Atoms = 38
+}
+Region {
+  Atoms = 39
+}
+Region {
+  Atoms = 40
+}
+Region {
+  Atoms = 41
+}
+Region {
+  Atoms = 42
+}
+Region {
+  Atoms = 43
+}
+Region {
+  Atoms = 44
+}
+Region {
+  Atoms = 45
+}
+Region {
+  Atoms = 46
+}
+Region {
+  Atoms = 47
+}
+Region {
+  Atoms = 48
+}
+Region {
+  Atoms = 49
+}
+Region {
+  Atoms = 50
+}
+Region {
+  Atoms = 51
+}
+Region {
+  Atoms = 52
+}
+Region {
+  Atoms = 53
+}
+Region {
+  Atoms = 54
+}
+Region {
+  Atoms = 55
+}
+Region {
+  Atoms = 56
+}
+Region {
+  Atoms = 57
+}
+Region {
+  Atoms = 58
+}
+Region {
+  Atoms = 59
+}
+Region {
+  Atoms = 60
+}
+Region {
+  Atoms = 61
+}
+Region {
+  Atoms = 62
+}
+Region {
+  Atoms = 63
+}
+Region {
+  Atoms = 64
+}
+Region {
+  Atoms = 65
+}
+Region {
+  Atoms = 66
+}
+Region {
+  Atoms = 67
+}
+Region {
+  Atoms = 68
+}
+Region {
+  Atoms = 69
+}
+Region {
+  Atoms = 70
+}
+Region {
+  Atoms = 71
+}
+Region {
+  Atoms = 72
+}
+Region {
+  Atoms = 73
+}
+Region {
+  Atoms = 74
+}
+Region {
+  Atoms = 75
+}
+Region {
+  Atoms = 76
+}
+Region {
+  Atoms = 77
+}
+Region {
+  Atoms = 78
+}
+Region {
+  Atoms = 79
+}
+Region {
+  Atoms = 80
+}
+Region {
+  Atoms = 81
+}
+Region {
+  Atoms = 82
+}
+Region {
+  Atoms = 83
+}
+Region {
+  Atoms = 84
+}
+Region {
+  Atoms = 85
+}
+Region {
+  Atoms = 86
+}
+Region {
+  Atoms = 87
+}
+Region {
+  Atoms = 88
+}
+Region {
+  Atoms = 89
+}
+Region {
+  Atoms = 90
+}
+Region {
+  Atoms = 91
+}
+Region {
+  Atoms = 92
+}
+Region {
+  Atoms = 93
+}
+Region {
+  Atoms = 94
+}
+Region {
+  Atoms = 95
+}
+Region {
+  Atoms = 96
+}
+Region {
+  Atoms = 97
+}
+Region {
+  Atoms = 98
+}
+Region {
+  Atoms = 99
+}
+Region {
+  Atoms = 100
+}
+Region {
+  Atoms = 101
+}
+Region {
+  Atoms = 102
+}
+Region {
+  Atoms = 103
+}
+Region {
+  Atoms = 104
+}
+Region {
+  Atoms = 105
+}
+Region {
+  Atoms = 106
+}
+Region {
+  Atoms = 107
+}
+Region {
+  Atoms = 108
+}
+Region {
+  Atoms = 109
+}
+Region {
+  Atoms = 110
+}
+Region {
+  Atoms = 111
+}
+Region {
+  Atoms = 112
+}
+Region {
+  Atoms = 113
+}
+Region {
+  Atoms = 114
+}
+Region {
+  Atoms = 115
+}
+Region {
+  Atoms = 116
+}
+Region {
+  Atoms = 117
+}
+Region {
+  Atoms = 118
+}
+Region {
+  Atoms = 119
+}
+Region {
+  Atoms = 120
+}
+Region {
+  Atoms = 121
+}
+Region {
+  Atoms = 122
+}
+Region {
+  Atoms = 123
+}
+Region {
+  Atoms = 124
+}
+Region {
+  Atoms = 125
+}
+Region {
+  Atoms = 126
+}
+Region {
+  Atoms = 127
+}
+Region {
+  Atoms = 128
+}
+Region {
+  Atoms = 129
+}
+Region {
+  Atoms = 130
+}
+Region {
+  Atoms = 131
+}
+Region {
+  Atoms = 132
+}
+Region {
+  Atoms = 133
+}
+Region {
+  Atoms = 134
+}
+Region {
+  Atoms = 135
+}
+Region {
+  Atoms = 136
+}
+Region {
+  Atoms = 137
+}
+Region {
+  Atoms = 138
+}
+Region {
+  Atoms = 139
+}
+Region {
+  Atoms = 140
+}
+Region {
+  Atoms = 141
+}
+Region {
+  Atoms = 142
+}
+Region {
+  Atoms = 143
+}
+Region {
+  Atoms = 144
+}
+Region {
+  Atoms = 145
+}
+Region {
+  Atoms = 146
+}
+Region {
+  Atoms = 147
+}
+Region {
+  Atoms = 148
+}
+Region {
+  Atoms = 149
+}
+Region {
+  Atoms = 150
+}
+Region {
+  Atoms = 151
+}
+Region {
+  Atoms = 152
+}
+Region {
+  Atoms = 153
+}
+Region {
+  Atoms = 154
+}
+Region {
+  Atoms = 155
+}
+Region {
+  Atoms = 156
+}
+Region {
+  Atoms = 157
+}
+Region {
+  Atoms = 158
+}
+Region {
+  Atoms = 159
+}
+Region {
+  Atoms = 160
+}
+Region {
+  Atoms = 161
+}
+Region {
+  Atoms = 162
+}
+Region {
+  Atoms = 163
+}
+Region {
+  Atoms = 164
+}
+Region {
+  Atoms = 165
+}
+Region {
+  Atoms = 166
+}
+Region {
+  Atoms = 167
+}
+Region {
+  Atoms = 168
+}
+Region {
+  Atoms = 169
+}
+Region {
+  Atoms = 170
+}
+Region {
+  Atoms = 171
+}
+Region {
+  Atoms = 172
+}
+Region {
+  Atoms = 173
+}
+Region {
+  Atoms = 174
+}
+Region {
+  Atoms = 175
+}
+Region {
+  Atoms = 176
+}
+Region {
+  Atoms = 177
+}
+Region {
+  Atoms = 178
+}
+Region {
+  Atoms = 179
+}
+Region {
+  Atoms = 180
+}
+Region {
+  Atoms = 181
+}
+Region {
+  Atoms = 182
+}
+Region {
+  Atoms = 183
+}
+Region {
+  Atoms = 184
+}
+Region {
+  Atoms = 185
+}
+Region {
+  Atoms = 186
+}
+Region {
+  Atoms = 187
+}
+Region {
+  Atoms = 188
+}
+Region {
+  Atoms = 189
+}
+Region {
+  Atoms = 190
+}
+Region {
+  Atoms = 191
+}
+Region {
+  Atoms = 192
+}
+Region {
+  Atoms = 193
+}
+Region {
+  Atoms = 194
+}
+Region {
+  Atoms = 195
+}
+Region {
+  Atoms = 196
+}
+Region {
+  Atoms = 197
+}
+Region {
+  Atoms = 198
+}
+Region {
+  Atoms = 199
+}
+Region {
+  Atoms = 200
+}
+Region {
+  Atoms = 201
+}
+Region {
+  Atoms = 202
+}
+Region {
+  Atoms = 203
+}
+Region {
+  Atoms = 204
+}
+Region {
+  Atoms = 205
+}
+Region {
+  Atoms = 206
+}
+Region {
+  Atoms = 207
+}
+Region {
+  Atoms = 208
+}
+Region {
+  Atoms = 209
+}
+Region {
+  Atoms = 210
+}
+Region {
+  Atoms = 211
+}
+Region {
+  Atoms = 212
+}
+Region {
+  Atoms = 213
+}
+Region {
+  Atoms = 214
+}
+Region {
+  Atoms = 215
+}
+Region {
+  Atoms = 216
+}
+Region {
+  Atoms = 217
+}
+Region {
+  Atoms = 218
+}
+Region {
+  Atoms = 219
+}
+Region {
+  Atoms = 220
+}
+Region {
+  Atoms = 221
+}
+Region {
+  Atoms = 222
+}
+Region {
+  Atoms = 223
+}
+Region {
+  Atoms = 224
+}
+Region {
+  Atoms = 225
+}
+Region {
+  Atoms = 226
+}
+Region {
+  Atoms = 227
+}
+Region {
+  Atoms = 228
+}
+Region {
+  Atoms = 229
+}
+Region {
+  Atoms = 230
+}
+Region {
+  Atoms = 231
+}
+Region {
+  Atoms = 232
+}
+Region {
+  Atoms = 233
+}
+Region {
+  Atoms = 234
+}
+Region {
+  Atoms = 235
+}
+Region {
+  Atoms = 236
+}
+Region {
+  Atoms = 237
+}
+Region {
+  Atoms = 238
+}
+Region {
+  Atoms = 239
+}
+Region {
+  Atoms = 240
+}
+Region {
+  Atoms = 241
+}
+Region {
+  Atoms = 242
+}
+Region {
+  Atoms = 243
+}
+Region {
+  Atoms = 244
+}
+Region {
+  Atoms = 245
+}
+Region {
+  Atoms = 246
+}
+Region {
+  Atoms = 247
+}
+Region {
+  Atoms = 248
+}
+Region {
+  Atoms = 249
+}
+Region {
+  Atoms = 250
+}
+Region {
+  Atoms = 251
+}
+Region {
+  Atoms = 252
+}
+Region {
+  Atoms = 253
+}
+Region {
+  Atoms = 254
+}
+Region {
+  Atoms = 255
+}
+Region {
+  Atoms = 256
+}
+Region {
+  Atoms = 257
+}
+Region {
+  Atoms = 258
+}
+Region {
+  Atoms = 259
+}
+Region {
+  Atoms = 260
+}
+Region {
+  Atoms = 261
+}
+Region {
+  Atoms = 262
+}
+Region {
+  Atoms = 263
+}
+Region {
+  Atoms = 264
+}
+Region {
+  Atoms = 265
+}
+Region {
+  Atoms = 266
+}
+Region {
+  Atoms = 267
+}
+Region {
+  Atoms = 268
+}
+Region {
+  Atoms = 269
+}
+Region {
+  Atoms = 270
+}
+Region {
+  Atoms = 271
+}
+Region {
+  Atoms = 272
+}
+Region {
+  Atoms = 273
+}
+Region {
+  Atoms = 274
+}
+Region {
+  Atoms = 275
+}
+Region {
+  Atoms = 276
+}
+Region {
+  Atoms = 277
+}
+Region {
+  Atoms = 278
+}
+Region {
+  Atoms = 279
+}
+Region {
+  Atoms = 280
+}
+Region {
+  Atoms = 281
+}
+Region {
+  Atoms = 282
+}
+Region {
+  Atoms = 283
+}
+Region {
+  Atoms = 284
+}
+Region {
+  Atoms = 285
+}
+Region {
+  Atoms = 286
+}
+Region {
+  Atoms = 287
+}
+Region {
+  Atoms = 288
+}
+Region {
+  Atoms = 289
+}
+Region {
+  Atoms = 290
+}
+Region {
+  Atoms = 291
+}
+Region {
+  Atoms = 292
+}
+Region {
+  Atoms = 293
+}
+Region {
+  Atoms = 294
+}
+Region {
+  Atoms = 295
+}
+Region {
+  Atoms = 296
+}
+Region {
+  Atoms = 297
+}
+Region {
+  Atoms = 298
+}
+Region {
+  Atoms = 299
+}
+Region {
+  Atoms = 300
+}
+Region {
+  Atoms = 301
+}
+Region {
+  Atoms = 302
+}
+Region {
+  Atoms = 303
+}
+Region {
+  Atoms = 304
+}
+Region {
+  Atoms = 305
+}
+Region {
+  Atoms = 306
+}
+Region {
+  Atoms = 307
+}
+Region {
+  Atoms = 308
+}
+Region {
+  Atoms = 309
+}
+Region {
+  Atoms = 310
+}
+Region {
+  Atoms = 311
+}
+Region {
+  Atoms = 312
+}
+Region {
+  Atoms = 313
+}
+Region {
+  Atoms = 314
+}
+Region {
+  Atoms = 315
+}
+Region {
+  Atoms = 316
+}
+Region {
+  Atoms = 317
+}
+Region {
+  Atoms = 318
+}
+Region {
+  Atoms = 319
+}
+Region {
+  Atoms = 320
+}
+Region {
+  Atoms = 321
+}
+Region {
+  Atoms = 322
+}
+Region {
+  Atoms = 323
+}
+Region {
+  Atoms = 324
+}
+Region {
+  Atoms = 325
+}
+Region {
+  Atoms = 326
+}
+Region {
+  Atoms = 327
+}
+Region {
+  Atoms = 328
+}
+Region {
+  Atoms = 329
+}
+Region {
+  Atoms = 330
+}
+Region {
+  Atoms = 331
+}
+Region {
+  Atoms = 332
+}
+Region {
+  Atoms = 333
+}
+Region {
+  Atoms = 334
+}
+Region {
+  Atoms = 335
+}
+Region {
+  Atoms = 336
+}
+Region {
+  Atoms = 337
+}
+Region {
+  Atoms = 338
+}
+Region {
+  Atoms = 339
+}
+Region {
+  Atoms = 340
+}
+Region {
+  Atoms = 341
+}
+Region {
+  Atoms = 342
+}
+Region {
+  Atoms = 343
+}
+Region {
+  Atoms = 344
+}
+Region {
+  Atoms = 345
+}
+Region {
+  Atoms = 346
+}
+Region {
+  Atoms = 347
+}
+Region {
+  Atoms = 348
+}
+Region {
+  Atoms = 349
+}
+Region {
+  Atoms = 350
+}
+Region {
+  Atoms = 351
+}
+Region {
+  Atoms = 352
+}
+Region {
+  Atoms = 353
+}
+Region {
+  Atoms = 354
+}
+Region {
+  Atoms = 355
+}
+Region {
+  Atoms = 356
+}
+Region {
+  Atoms = 357
+}
+Region {
+  Atoms = 358
+}
+Region {
+  Atoms = 359
+}
+Region {
+  Atoms = 360
+}
+Region {
+  Atoms = 361
+}
+Region {
+  Atoms = 362
+}
+Region {
+  Atoms = 363
+}
+Region {
+  Atoms = 364
+}
+Region {
+  Atoms = 365
+}
+Region {
+  Atoms = 366
+}
+Region {
+  Atoms = 367
+}
+Region {
+  Atoms = 368
+}
+Region {
+  Atoms = 369
+}
+Region {
+  Atoms = 370
+}
+
+  }
+  }
+                
+Options {
+    WriteDetailedXml = Yes
+    WriteAutotestTag = Yes
+    WriteResultsTag = Yes
+    WriteChargesAsText = Yes
+}
+                
+ParserOptions {
+    ParserVersion = 6
+}
+                
