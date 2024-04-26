@@ -55,6 +55,8 @@ def main(args):
         stm_output = Path(args.stm_output)
         stm_output.mkdir(exist_ok=True, parents=True)
 
+    # TODO in realta' ho gia i file gen nella cartella ma dovrei cambiare la box. Per la box devo farla piu grande di 50 visto che ora solo l'elettrodo e' circa 56, dovrei stare sui 65 ora.
+    # TODO implementare il nuovo trasporto con SCC
     # === Convert xyz files to gen files === #
     ic("Converting xyz files to gen files...")
     files = [f for f in electrodes_dir.iterdir() if f.suffix.lower() == ".xyz"]

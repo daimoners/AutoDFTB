@@ -150,7 +150,7 @@ def generate_electrode(
     cell: float = [34.43317005446928, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0],
     contact_vector: float = 4.919024293495611,
     json_file: Path = None,
-):
+) -> dict:
     cell_x = cell[0]
 
     atoms_el, X_el, Y_el, Z_el = read_from_xyz_file(electrode_path)
@@ -201,6 +201,8 @@ def generate_electrode(
         with open(str(json_file), "w") as f:
             json.dump(data, f, indent=4)
 
+    return atom_range
+
 
 def check_geometry_convergence(slurm_out: Path):
     if not slurm_out.exists():
@@ -240,7 +242,7 @@ def get_electrode_cell(
     atoms, X, Y, Z = read_from_xyz_file(electrod_path)
 
     y_cell = original_cell[4]
-    x_cell = np.max(X) + bond_lenght * math.cos(math.pi / 6)
+    x_cell = np.max(X) + bond_lenght * math.cos(math.pi / 6) - np.min(X)
 
     data = {"cell": [x_cell, 0.0, 0.0, 0.0, y_cell, 0.0, 0.0, 0.0, 10.0]}
 

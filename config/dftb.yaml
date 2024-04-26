@@ -4,7 +4,7 @@ dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
 slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
 xyz_dir: ${package_path}/data/dftb/xyz_files_fixed_opt
 poscar_dir: ${package_path}/data/dftb/poscar_files
-json_dir: ${package_path}/data/dftb/json_files_2
+json_dir: ${package_path}/data/dftb/json_files
 working_dir: ${package_path}/tmp
 
 # BOX SIZE

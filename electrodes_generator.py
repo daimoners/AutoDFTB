@@ -2,14 +2,11 @@ try:
     from pathlib import Path
     from lib.electrodes_lib import (
         generate_electrode,
-        adjust_outliers_atoms,
-        check_interface_num_atoms,
         check_geometry_convergence,
     )
     from lib.dftb_lib import prepare_dftbplus_input
     from lib.poscar_lib import xyz_to_poscar
     from lib.utils_lib import (
-        get_cell_from_gen,
         launch_bin,
         check_dir,
         check_file,
@@ -17,8 +14,7 @@ try:
         move_xyz_to_origin,
     )
     import hydra
-    from tqdm import tqdm
-    import os
+    from tqdm.rich import tqdm
     from icecream import ic
     import submitit
     import shutil
@@ -87,75 +83,61 @@ def generate_transport_devices(args):
     dftb_bin_path = Path(args.dftb_bin_path)
     working_dir = Path(args.working_dir)
     file = Path(args.file)
-    fixed_path = Path(args.xyz_dir_fixed)
-    fixed_path.mkdir(exist_ok=True, parents=True)
     electrodes_path = Path(args.electrodes_dir)
     electrodes_path.mkdir(exist_ok=True, parents=True)
     box_size = list(args.box_size)
-    bond_lenght = args.bond_lenght
-    delta_x = args.delta_x
-    delta_y = args.delta_y
-    delta_interface = args.delta_interface
     electrode_path = args.electrode_path
     electrode_cell = args.electrode_cell
 
-    shutil.copy(file, working_dir.joinpath(f"{file.stem}_fixed.xyz"))
+    shutil.copy(file, working_dir.joinpath(file.name))
+
+    atom_range = generate_electrode(
+        working_dir.joinpath(file.name),
+        working_dir.joinpath(f"{file.stem}_e.xyz"),
+        Path(electrode_path),
+        cell=box_size,
+        contact_vector=float(electrode_cell[0]),
+    )
+
+    box_size[0] += 2 * electrode_cell[0]
+    with open_dict(args):
+        args.box_size = box_size
 
     xyz_to_poscar(
-        working_dir.joinpath(f"{file.stem}_fixed.xyz"),
-        working_dir.joinpath(f"{file.stem}_fixed.POSCAR"),
+        working_dir.joinpath(f"{file.stem}_e.xyz"),
+        working_dir.joinpath(f"{file.stem}_e.POSCAR"),
         default_box_size=box_size,
     )
-    prepare_dftbplus_input(args, working_dir.joinpath(f"{file.stem}_fixed.POSCAR"))
+    with open_dict(args):
+        args.moved_atoms = atom_range["device"]
+    prepare_dftbplus_input(args, working_dir.joinpath(f"{file.stem}_e.POSCAR"))
     launch_bin(dftb_bin_path, working_dir, verbose=args.verbose)
-    shutil.copy(
-        working_dir.joinpath(f"opt_{file.stem}_fixed.xyz"),
-        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
-    )
-    get_cell_from_gen(
-        working_dir.joinpath(f"opt_{file.stem}_fixed.gen"),
-        json_output_path=fixed_path.joinpath(f"{file.stem}_fixed.json"),
-    )
     if not check_geometry_convergence(
         Path(args.package_path).joinpath(args.slurm_output, file.stem)
     ):
         print(f"Warning, Geometry did NOT converge for {file.stem}!")
         if args.remove_if_not_converged:
-            os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.xyz")))
-            os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.json")))
             shutil.rmtree(working_dir)
             return
+    else:
+        translate_xyz_file(
+            working_dir.joinpath(f"opt_{file.stem}_e.xyz"), z_offset=-5.0
+        )
+        move_xyz_to_origin(working_dir.joinpath(f"opt_{file.stem}_e.xyz"))
 
-    translate_xyz_file(fixed_path.joinpath(f"{file.stem}_fixed.xyz"), z_offset=-5.0)
-    move_xyz_to_origin(fixed_path.joinpath(f"{file.stem}_fixed.xyz"))
+        shutil.copy(
+            working_dir.joinpath(f"opt_{file.stem}_e.xyz"),
+            electrodes_path.joinpath(f"{file.stem}_e.xyz"),
+        )
+        shutil.copy(
+            working_dir.joinpath(f"opt_{file.stem}_e.gen"),
+            electrodes_path.joinpath(f"{file.stem}_e.gen"),
+        )
+        shutil.copy(
+            working_dir.joinpath(f"{file.stem}_e.json"),
+            electrodes_path.joinpath(f"{file.stem}_e.json"),
+        )
 
-    adjust_outliers_atoms(
-        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
-        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
-        cell_x=box_size[0],
-        cell_y=box_size[4],
-        delta_x=delta_x,
-        delta_y=delta_y,
-    )
-
-    if not check_interface_num_atoms(
-        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
-        cell_y=box_size[4],
-        delta=delta_interface,
-        bond_lenght=bond_lenght,
-    ):
-        os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.xyz")))
-        os.remove(str(fixed_path.joinpath(f"{file.stem}_fixed.json")))
-        shutil.rmtree(working_dir)
-        return
-
-    generate_electrode(
-        fixed_path.joinpath(f"{file.stem}_fixed.xyz"),
-        electrodes_path.joinpath(f"{file.stem}_e.xyz"),
-        Path(electrode_path),
-        cell=box_size,
-        contact_vector=float(electrode_cell[0]),
-    )
     shutil.rmtree(working_dir)
 
 
