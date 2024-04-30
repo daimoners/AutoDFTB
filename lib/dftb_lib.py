@@ -218,14 +218,23 @@ Driver = {}\n"""
 
     @property
     def solver(self):
-        if hasattr(self.args, "solver"):
-            return (
-                """
-    Solver = """
-                + f"{self.args.solver}"
-                + """{}
+        if not hasattr(self.args, "solver"):
+            self.args.solver = False
+
+        if self.args.solver == "TransportOnly":
+            return """
+    Solver = TransportOnly {}
         """
-            )
+
+        elif self.args.solver == "GreensFunction":
+            return """
+    Solver = GreensFunction{SaveSurfaceGFs = No}
+    Electrostatics = Poisson {
+        Verbosity = 101
+        MinimalGrid [Angstrom] = 0.5 0.5 0.5
+        SavePotential = Yes
+    }
+        """
         else:
             return ""
 
@@ -309,6 +318,10 @@ ParserOptions {
     def get_transport_properties(
         self, contact: str = "source", components: dict = None
     ):
+        if not hasattr(self.args, "task"):
+            with open_dict(self.args):
+                self.args.task = False
+
         if components is None:
 
             self.components = extract_transport_components(self.args.transport_file)
@@ -344,8 +357,17 @@ Transport{
     """
                 + f"{components['drain']}"
                 + """
+    """
+                + (f"{self.get_transport_task()}" if self.args.task else "")
+                + """
 }\n        """
             )
+
+    def get_transport_task(self):
+        if self.args.task == "UploadContacts":
+            return """
+    Task = UploadContacts {}
+        """
 
     @staticmethod
     def generate_region_string(start, end):

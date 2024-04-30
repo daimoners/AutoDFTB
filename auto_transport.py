@@ -56,7 +56,6 @@ def main(args):
         stm_output.mkdir(exist_ok=True, parents=True)
 
     # TODO in realta' ho gia i file gen nella cartella ma dovrei cambiare la box. Per la box devo farla piu grande di 50 visto che ora solo l'elettrodo e' circa 56, dovrei stare sui 65 ora.
-    # TODO implementare il nuovo trasporto con SCC
     # === Convert xyz files to gen files === #
     ic("Converting xyz files to gen files...")
     files = [f for f in electrodes_dir.iterdir() if f.suffix.lower() == ".xyz"]
@@ -169,10 +168,20 @@ def transport(args):
 
     fermi_energy_source = float(lines[-1].split()[-2])
 
+    shutil.copy(
+        contact_working_dir.joinpath("shiftcont_source.dat"),
+        transport_working_dir.joinpath("shiftcont_source.dat"),
+    )
+
     with open(str(contact_working_dir.joinpath("shiftcont_drain.dat")), "r") as f:
         lines = f.readlines()
 
     fermi_energy_drain = float(lines[-1].split()[-2])
+
+    shutil.copy(
+        contact_working_dir.joinpath("shiftcont_drain.dat"),
+        transport_working_dir.joinpath("shiftcont_drain.dat"),
+    )
 
     # === Rebuild dftb_in.hsd === #
     fermi_string_source = f"FermiLevel [eV] = {fermi_energy_source:.2f}"
@@ -196,7 +205,7 @@ def transport(args):
 
     # === Prepare and run dftb+ input for transport computation === #
     with open_dict(args):
-        args.solver = "TransportOnly"
+        args.solver = "GreensFunction"
         args.tunnelinganddos.energy_range = [
             fermi_energy_drain - args.tunnelinganddos.offset_energy_range,
             fermi_energy_source + args.tunnelinganddos.offset_energy_range,
@@ -258,7 +267,7 @@ def transport(args):
         xyz_dir = Path(args.xyz_dir)
         fermi_energy_mean = (float(fermi_energy_source) + float(fermi_energy_drain)) / 2
         stm = StmSimulator(
-            xyz_path=xyz_dir.joinpath(f"{file.stem[:-2]}_fixed.xyz"),
+            xyz_path=xyz_dir.joinpath(f"{file.stem[:-2]}_opt.xyz"),
             dos_per_atom_path=transport_output.joinpath(f"{file.stem}.json"),
             fermi_level=fermi_energy_mean,
             bias=args.bias,

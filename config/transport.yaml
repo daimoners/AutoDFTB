@@ -5,17 +5,17 @@ slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
 setupgeom_bin_path: /home/tommaso/Applications/dftbplus/bin/setupgeom
 working_dir: ${package_path}/tmp
 
-electrodes_dir: ${package_path}/data/new_transport/electrodes
-gen_dir: ${package_path}/data/new_transport/gen_files
-transport_output: ${package_path}/data/new_transport/transport_output
+electrodes_dir: ${package_path}/data/transport/electrodes_test
+gen_dir: ${package_path}/data/transport/gen_files
+transport_output: ${package_path}/data/transport/transport_output
 
 # BOX SIZE
 periodic: True
-box_size: [50.0, 0.0, 0.0, 0.0, 34.25591181, 0.0, 0.0, 0.0, 40.0]
+box_size: [65.0, 0.0, 0.0, 0.0, 34.27629786, 0.0, 0.0, 0.0, 40.0]
 
 # ELECTRODE
 electrode_cell:
-  [4.9390060733739025, 0.0, 0.0, 0.0, 34.25591181, 0.0, 0.0, 0.0, 10.0]
+  [7.409367073373903, 0.0, 0.0, 0.0, 34.27629786, 0.0, 0.0, 0.0, 10.0]
 
 #SETUPGEOM
 plsdefined: 1
@@ -24,6 +24,9 @@ plsdefined: 1
 fermi_temperature: 0.0
 
 #TRANSPORT
+scc: True
+max_iterations: 100
+task: UploadContacts
 potential_source: 0.05
 potential_drain: -0.05
 tunnelinganddos:
@@ -38,13 +41,13 @@ bias: 0.35
 resolution: 256
 tau: 5
 scan_h: 1
-stm_output: ${package_path}/data/new_transport/stm_images
-xyz_dir: ${package_path}/data/new_transport/xyz_files_fixed
+stm_output: ${package_path}/data/transport/stm_images
+xyz_dir: ${package_path}/data/dftb/xyz_files_fixed_opt #TODO da rivedere perche in realta' dovrei prendere gli elettrodi ottimizzati e tagliare gli elettrodi
 save_npy: False
 save_png: True
 
 # SLURM
-slurm_job_name: Graphene_Transport
+slurm_job_name: Transport _G
 slurm_mem:
 slurm_ncpus: 16
 slurm_nodelist:
