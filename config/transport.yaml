@@ -25,7 +25,7 @@ fermi_temperature: 0.0
 
 #TRANSPORT
 scc: True
-max_iterations: 100
+max_iterations: 200
 task: UploadContacts
 potential_source: 0.05
 potential_drain: -0.05
@@ -42,12 +42,12 @@ resolution: 256
 tau: 5
 scan_h: 1
 stm_output: ${package_path}/data/transport/stm_images
-xyz_dir: ${package_path}/data/dftb/xyz_files_fixed_opt #TODO da rivedere perche in realta' dovrei prendere gli elettrodi ottimizzati e tagliare gli elettrodi
+xyz_dir: ${package_path}/data/transport/devices
 save_npy: False
 save_png: True
 
 # SLURM
-slurm_job_name: Transport _G
+slurm_job_name: Transport_G
 slurm_mem:
 slurm_ncpus: 16
 slurm_nodelist:

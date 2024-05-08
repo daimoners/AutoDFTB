@@ -233,55 +233,61 @@ def transport(args):
     )
 
     # === Prepare JSON ouput === #
-    current = get_current_value(
-        transport_working_dir.joinpath("transport_output.out"),
-        transport_working_dir.joinpath(f"{file.stem}.json"),
-    )
-
-    data = {
-        "file_name": file.stem,
-        "current": current,
-        "transport_cell": list(args.box_size),
-        "contact_vector": list(args.contact_vector),
-        "potential_source": args.potential_source,
-        "potential_drain": args.potential_drain,
-        "energy_range": list(args.tunnelinganddos.energy_range),
-        "energy_step": args.tunnelinganddos.energy_step,
-        "fermi_temperature": args.fermi_temperature,
-        "fermi_energy_source": float(fermi_energy_source),
-        "fermi_energy_drain": float(fermi_energy_drain),
-    }
-
-    if args.tunnelinganddos.compute_regions:
-        data["LDOS"] = get_regions_dict(transport_working_dir)
-
-    with open(str(transport_working_dir.joinpath(f"{file.stem}.json")), "w") as f:
-        json.dump(data, f, indent=4)
-    shutil.copy(
-        transport_working_dir.joinpath(f"{file.stem}.json"),
-        transport_output.joinpath(f"{file.stem}.json"),
-    )
-
-    # === STM === #
-    if args.compute_stm:
-        xyz_dir = Path(args.xyz_dir)
-        fermi_energy_mean = (float(fermi_energy_source) + float(fermi_energy_drain)) / 2
-        stm = StmSimulator(
-            xyz_path=xyz_dir.joinpath(f"{file.stem[:-2]}_opt.xyz"),
-            dos_per_atom_path=transport_output.joinpath(f"{file.stem}.json"),
-            fermi_level=fermi_energy_mean,
-            bias=args.bias,
-        )
-        img = stm.get_stm_img(
-            image_res=(args.resolution, args.resolution),
-            tau=args.tau,
-            scan_h=args.scan_h,
+    try:
+        current = get_current_value(
+            transport_working_dir.joinpath("transport_output.out"),
+            transport_working_dir.joinpath(f"{file.stem}.json"),
         )
 
-        if args.save_npy:
-            stm.save_npy(img, Path(args.stm_output).joinpath(f"{file.stem}.npy"))
-        if args.save_png:
-            stm.save_png(-img, Path(args.stm_output).joinpath(f"{file.stem}.png"))
+        data = {
+            "file_name": file.stem,
+            "current": current,
+            "transport_cell": list(args.box_size),
+            "contact_vector": list(args.contact_vector),
+            "potential_source": args.potential_source,
+            "potential_drain": args.potential_drain,
+            "energy_range": list(args.tunnelinganddos.energy_range),
+            "energy_step": args.tunnelinganddos.energy_step,
+            "fermi_temperature": args.fermi_temperature,
+            "fermi_energy_source": float(fermi_energy_source),
+            "fermi_energy_drain": float(fermi_energy_drain),
+        }
+
+        if args.tunnelinganddos.compute_regions:
+            data["LDOS"] = get_regions_dict(transport_working_dir)
+
+        with open(str(transport_working_dir.joinpath(f"{file.stem}.json")), "w") as f:
+            json.dump(data, f, indent=4)
+        shutil.copy(
+            transport_working_dir.joinpath(f"{file.stem}.json"),
+            transport_output.joinpath(f"{file.stem}.json"),
+        )
+
+        # === STM === #
+        if args.compute_stm:
+            xyz_dir = Path(args.xyz_dir)
+            fermi_energy_mean = (
+                float(fermi_energy_source) + float(fermi_energy_drain)
+            ) / 2
+            stm = StmSimulator(
+                xyz_path=xyz_dir.joinpath(f"{file.stem}.xyz"),
+                dos_per_atom_path=transport_output.joinpath(f"{file.stem}.json"),
+                fermi_level=fermi_energy_mean,
+                bias=args.bias,
+            )
+            img = stm.get_stm_img(
+                image_res=(args.resolution, args.resolution),
+                tau=args.tau,
+                scan_h=args.scan_h,
+            )
+
+            if args.save_npy:
+                stm.save_npy(img, Path(args.stm_output).joinpath(f"{file.stem}.npy"))
+            if args.save_png:
+                stm.save_png(-img, Path(args.stm_output).joinpath(f"{file.stem}.png"))
+
+    except Exception as e:
+        print(e)
 
     shutil.rmtree(transport_working_dir)
     shutil.rmtree(setupgeom_working_dir)

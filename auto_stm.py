@@ -43,12 +43,12 @@ def main(args):
     for file in tqdm(files):
         check_file(file)
         try:
-            check_file(json_dir.joinpath(f"{file.stem[:-6]}_e.json"))
+            check_file(json_dir.joinpath(f"{file.stem}.json"))
         except:
             continue
         with open_dict(args):
             args.xyz_file = str(file)
-            args.json_file = str(json_dir.joinpath(f"{file.stem[:-6]}_e.json"))
+            args.json_file = str(json_dir.joinpath(f"{file.stem}.json"))
 
         Path(args.slurm_output).joinpath(file.stem).mkdir(parents=True, exist_ok=True)
         executor = submitit.AutoExecutor(
