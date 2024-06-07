@@ -12,7 +12,12 @@ except Exception as e:
 
 class StmSimulator:
     def __init__(
-        self, xyz_path: Path, dos_per_atom_path: Path, bias: float, fermi_level: float
+        self,
+        xyz_path: Path,
+        dos_per_atom_path: Path,
+        bias: float,
+        fermi_level: float,
+        atoms_device: list = None,
     ) -> None:
         # self.__check_dir__(xyz_path)
         # self.__check_dir(dos_per_atom_path)
@@ -23,6 +28,7 @@ class StmSimulator:
         self.dos_per_atom_path = dos_per_atom_path
         self.bias = bias
         self.fermi_level = fermi_level
+        self.atoms_device = atoms_device
 
     def __check_dir(self, path: Path) -> "bool":
         """
@@ -84,6 +90,9 @@ class StmSimulator:
         with open(self.xyz_path, "r") as file:
             num_atoms = int(file.readline())
             file.readline()
+
+            if self.atoms_device is not None:
+                num_atoms = self.atoms_device[1]
 
             for _ in range(num_atoms):
                 line = file.readline().split()

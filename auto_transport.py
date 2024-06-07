@@ -205,7 +205,10 @@ def transport(args):
 
     # === Prepare and run dftb+ input for transport computation === #
     with open_dict(args):
-        args.solver = "GreensFunction"
+        if args.scc:
+            args.solver = "GreensFunction"
+        else:
+            args.solver = "TransportOnly"
         args.tunnelinganddos.energy_range = [
             fermi_energy_drain - args.tunnelinganddos.offset_energy_range,
             fermi_energy_source + args.tunnelinganddos.offset_energy_range,
@@ -242,6 +245,9 @@ def transport(args):
         data = {
             "file_name": file.stem,
             "current": current,
+            "atoms_device": list(args.atoms_device),
+            "atoms_source": list(args.atoms_source),
+            "atoms_drain": list(args.atoms_drain),
             "transport_cell": list(args.box_size),
             "contact_vector": list(args.contact_vector),
             "potential_source": args.potential_source,
@@ -274,6 +280,7 @@ def transport(args):
                 dos_per_atom_path=transport_output.joinpath(f"{file.stem}.json"),
                 fermi_level=fermi_energy_mean,
                 bias=args.bias,
+                atoms_device=list(args.atoms_device),
             )
             img = stm.get_stm_img(
                 image_res=(args.resolution, args.resolution),
@@ -286,8 +293,8 @@ def transport(args):
             if args.save_png:
                 stm.save_png(-img, Path(args.stm_output).joinpath(f"{file.stem}.png"))
 
-    except Exception as e:
-        print(e)
+    except:
+        raise Exception("Transport SCC not converged!")
 
     shutil.rmtree(transport_working_dir)
     shutil.rmtree(setupgeom_working_dir)

@@ -51,7 +51,18 @@ def main(args):
 
     # === Convert xyz files to POSCAR files === #
     ic("Converting xyz files to POSCAR files...")
-    files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+    json_dir = Path(args.json_dir)
+    if json_dir.is_dir():
+        already_done = [
+            f.stem for f in json_dir.iterdir() if f.suffix.lower() == ".json"
+        ]
+        files = [
+            f
+            for f in xyz_dir.iterdir()
+            if (f.suffix.lower() == ".xyz" and f.stem not in already_done)
+        ]
+    else:
+        files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
     for file in tqdm(files):
         xyz_to_poscar(file, poscar_dir.joinpath(f"{file.stem}.POSCAR"), box_size)
 

@@ -7,7 +7,9 @@ try:
     import subprocess
     import numpy as np
     from tqdm import tqdm
-    import math
+    from chemfiles import Trajectory
+    from PIL import Image, ImageDraw
+    from icecream import ic
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -649,6 +651,170 @@ def write_to_xyz_file(file_path: Path, atoms, X, Y, Z):
 
         for atom, x, y, z in zip(atoms, X, Y, Z):
             f.write(f"{atom} {x:.6f} {y:.6f} {z:.6f}\n")
+
+
+class Utils:
+    IMAGE_EXTENSIONS = (".jpg", ".png", ".jpeg")
+
+    @staticmethod
+    def generate_bonds_png(
+        spath: Path,
+        dpath: Path,
+        max_dim: list,
+        multiplier: int = 3,
+    ):
+
+        with Trajectory(str(spath)) as trajectory:
+            mol = trajectory.read()
+
+        resolution = round(
+            multiplier * (5 + np.max([np.abs(max_dim[0]), np.abs(max_dim[1])]))
+        )
+
+        B = Image.new("RGB", (resolution, resolution))
+        B_ = ImageDraw.Draw(B)
+
+        mol.guess_bonds()
+        if mol.topology.bonds_count() == 0:
+            print(f"No bonds guessed for {spath.stem}\n")
+        bonds = mol.topology.bonds
+
+        for i in range(len(bonds)):
+            x_1 = int(round(mol.positions[bonds[i][0]][0] * multiplier))
+            y_1 = int(round(mol.positions[bonds[i][0]][1] * multiplier))
+            x_2 = int(round(mol.positions[bonds[i][1]][0] * multiplier))
+            y_2 = int(round(mol.positions[bonds[i][1]][1] * multiplier))
+            line = [(x_1, y_1), (x_2, y_2)]
+            first_atom = mol.atoms[bonds[i][0]].name
+            second_atom = mol.atoms[bonds[i][1]].name
+            color = Utils.find_bound_type(first_atom, second_atom)
+            B_.line(line, fill=color, width=0)
+
+        B = Utils.crop_image(B)
+        B.save(str(dpath.joinpath(f"{spath.stem}.png")))
+
+    @staticmethod
+    def find_bound_type(first_atom: str, second_atom: str) -> str:
+        if (first_atom == "C" and second_atom == "C") or (
+            second_atom == "C" and first_atom == "C"
+        ):
+            return "red"
+        elif (first_atom == "C" and second_atom == "O") or (
+            second_atom == "O" and first_atom == "C"
+        ):
+            return "blue"
+        elif (first_atom == "O" and second_atom == "H") or (
+            second_atom == "H" and first_atom == "O"
+        ):
+            return "white"
+        elif (first_atom == "C" and second_atom == "H") or (
+            second_atom == "H" and first_atom == "C"
+        ):
+            return "yellow"
+
+    @staticmethod
+    def crop_image(image: Image, name: str = None, dpath: Path = None) -> Image:
+
+        image_data = np.asarray(image)
+        if len(image_data.shape) == 2:
+            image_data_bw = image_data
+        else:
+            image_data_bw = image_data.max(axis=2)
+        non_empty_columns = np.where(image_data_bw.max(axis=0) > 0)[0]
+        non_empty_rows = np.where(image_data_bw.max(axis=1) > 0)[0]
+        cropBox = (
+            min(non_empty_rows),
+            max(non_empty_rows),
+            min(non_empty_columns),
+            max(non_empty_columns),
+        )
+
+        if len(image_data.shape) == 2:
+            image_data_new = image_data[
+                cropBox[0] : cropBox[1] + 1, cropBox[2] : cropBox[3] + 1
+            ]
+        else:
+            image_data_new = image_data[
+                cropBox[0] : cropBox[1] + 1, cropBox[2] : cropBox[3] + 1, :
+            ]
+
+        new_image = Image.fromarray(image_data_new)
+        if dpath is not None:
+            new_image.save(dpath.joinpath(name))
+
+        return new_image
+
+    @staticmethod
+    def from_xyz_to_png(
+        spath: Path,
+        dpath: Path,
+        max_dim: list,
+        items: int = None,
+        multiplier: int = 6,
+    ):
+        if dpath.is_dir():
+            print(f"WARNING: the directory {dpath} already exists!")
+            return
+        else:
+            dpath.mkdir(exist_ok=True, parents=True)
+
+        files = [f for f in spath.iterdir() if f.suffix.lower() == ".xyz"]
+        if items is None:
+            items = len(files)
+
+        pbar = tqdm(total=len(files) if items > len(files) else items)
+        for i, file in enumerate(files):
+            if i >= items:
+                break
+            Utils.generate_bonds_png(file, dpath, max_dim, multiplier)
+            pbar.update(1)
+        pbar.close()
+
+    @staticmethod
+    def read_from_xyz_file(file_path: Path):
+        """Read xyz files and return lists of x,y,z coordinates and atoms"""
+
+        X = []
+        Y = []
+        Z = []
+        atoms = []
+
+        with open(str(file_path), "r") as f:
+            num_atom = int(next(f))
+            next(f)  # ignore the comment
+
+            for _ in range(num_atom):
+                l = next(f).split()
+                if len(l) == 4 or len(l) == 5:
+                    X.append(float(l[1]))
+                    Y.append(float(l[2]))
+                    Z.append(float(l[3]))
+                    atoms.append(str(l[0]))
+
+        X = np.asarray(X)
+        Y = np.asarray(Y)
+        Z = np.asarray(Z)
+
+        return atoms, X, Y, Z
+
+    @staticmethod
+    def check_x_interface_num_atoms(
+        file_path: Path,
+        num_atoms: int = 32,
+        delta: float = 1.42,
+    ):
+        atoms, X, Y, Z = Utils.read_from_xyz_file(file_path)
+
+        y_up = [y for y in Y if max(Y) - delta <= y <= max(Y)]
+        y_down = [y for y in Y if min(Y) <= y <= min(Y) + delta]
+
+        if len(y_up) == len(y_down) == num_atoms:
+            return True
+        else:
+            ic(
+                f"Warning, {file_path.name} failed check interface atom counts ({len(y_up)}!={len(y_down)}!={num_atoms}) and will be deleted!"
+            )
+            return False
 
 
 if __name__ == "__main__":

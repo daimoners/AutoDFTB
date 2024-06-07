@@ -219,7 +219,8 @@ Driver = {}\n"""
     @property
     def solver(self):
         if not hasattr(self.args, "solver"):
-            self.args.solver = False
+            with open_dict(self.args):
+                self.args.solver = False
 
         if self.args.solver == "TransportOnly":
             return """

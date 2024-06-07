@@ -87,11 +87,14 @@ def generate_stm_images(args):
     fermi_energy_drain = float(data["fermi_energy_drain"])
     fermi_energy = (fermi_energy_source + fermi_energy_drain) / 2
 
+    atoms_device = list(data["atoms_device"])
+
     stm = StmSimulator(
         xyz_path=xyz_file,
         dos_per_atom_path=json_file,
         fermi_level=fermi_energy,
         bias=args.bias,
+        atoms_device=atoms_device,
     )
     img = stm.get_stm_img(
         image_res=(args.resolution, args.resolution), tau=args.tau, scan_h=args.scan_h

@@ -20,5 +20,6 @@ tmp/
 grafene_perfetto/
 !templates/**/*.hsd
 !optimized_perfect_graphene/*
+!optimized_perfect_graphene/data_utils/*
 TODO.md
 prova*/
