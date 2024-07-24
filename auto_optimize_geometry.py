@@ -17,7 +17,7 @@ try:
         move_xyz_to_origin,
     )
     import hydra
-    from tqdm import tqdm
+    from tqdm.rich import tqdm
     import os
     from icecream import ic
     import submitit
@@ -47,8 +47,21 @@ def main(args):
     xyz_dir = Path(args.xyz_dir)
     check_dir(xyz_dir)
     working_dir = Path(args.working_dir)
+    out_path = Path(args.xyz_dir_fixed)
 
-    files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+    if out_path.is_dir():
+        already_done = [
+            f.stem[:-4] for f in out_path.iterdir() if f.suffix.lower() == ".xyz"
+        ]
+        files = [
+            f
+            for f in xyz_dir.iterdir()
+            if (f.suffix.lower() == ".xyz" and f.stem not in already_done)
+        ]
+    else:
+        already_done = []
+        files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)

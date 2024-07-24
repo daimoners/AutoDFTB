@@ -58,7 +58,18 @@ def main(args):
     # TODO in realta' ho gia i file gen nella cartella ma dovrei cambiare la box. Per la box devo farla piu grande di 50 visto che ora solo l'elettrodo e' circa 56, dovrei stare sui 65 ora.
     # === Convert xyz files to gen files === #
     ic("Converting xyz files to gen files...")
-    files = [f for f in electrodes_dir.iterdir() if f.suffix.lower() == ".xyz"]
+    if transport_output.is_dir():
+        already_done = [
+            f.stem for f in transport_output.iterdir() if f.suffix.lower() == ".json"
+        ]
+        files = [
+            f
+            for f in electrodes_dir.iterdir()
+            if (f.suffix.lower() == ".xyz" and f.stem not in already_done)
+        ]
+    else:
+        already_done = []
+        files = [f for f in electrodes_dir.iterdir() if f.suffix.lower() == ".xyz"]
     for file in tqdm(files):
         xyz2gen(
             file,
@@ -68,7 +79,11 @@ def main(args):
         shutil.copy(file.with_suffix(".json"), gen_dir.joinpath(f"{file.stem}.json"))
 
     # === Start DFTB+ simulations === #
-    files = [f for f in gen_dir.iterdir() if f.suffix.lower() == ".gen"]
+    files = [
+        f
+        for f in gen_dir.iterdir()
+        if (f.suffix.lower() == ".gen" and f.stem not in already_done)
+    ]
     ic(f"Submitting {len(files)} simulations...")
     for file in files:
         setupgeom_working_dir = working_dir.joinpath(f"{file.stem}_setupgeom")

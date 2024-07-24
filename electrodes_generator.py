@@ -44,7 +44,20 @@ def main(args):
     check_dir(xyz_dir)
     working_dir = Path(args.working_dir)
 
-    files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+    electrodes_dir = Path(args.electrodes_dir)
+
+    if electrodes_dir.is_dir():
+        already_done = [
+            f.stem[:-2] for f in electrodes_dir.iterdir() if f.suffix.lower() == ".json"
+        ]
+        files = [
+            f
+            for f in xyz_dir.iterdir()
+            if (f.suffix.lower() == ".xyz" and f.stem not in already_done)
+        ]
+    else:
+        files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)

@@ -62,12 +62,18 @@ def main(args):
             if (f.suffix.lower() == ".xyz" and f.stem not in already_done)
         ]
     else:
+        already_done = []
         files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+
     for file in tqdm(files):
         xyz_to_poscar(file, poscar_dir.joinpath(f"{file.stem}.POSCAR"), box_size)
 
     # === Start DFTB+ simulations === #
-    files = [f for f in poscar_dir.iterdir() if f.suffix.lower() == ".poscar"]
+    files = [
+        f
+        for f in poscar_dir.iterdir()
+        if (f.suffix.lower() == ".poscar" and f.stem not in already_done)
+    ]
     ic(f"Submitting {len(files)} simulations...")
     for file in files:
         local_working_dir = working_dir.joinpath(f"{working_dir.stem}_{file.stem}")

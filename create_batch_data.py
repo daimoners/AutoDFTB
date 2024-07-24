@@ -11,7 +11,7 @@ except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
 
 
-def main(n_batch: int, threshold: float = 0.085):
+def main(n_batch: int, threshold: float = 0.085, n_samples=5000):
     max_dim = [39.53476932, 34.27629786]
     tmp = Path().cwd().joinpath("tmp")
     tmp.mkdir(exist_ok=True, parents=True)
@@ -41,7 +41,7 @@ def main(n_batch: int, threshold: float = 0.085):
     out_path.mkdir(parents=True)
 
     count = 0
-    pbar = tqdm(total=5000)
+    pbar = tqdm(total=n_samples)
     for sample in new_samples:
         Utils.generate_bonds_png(sample, tmp, max_dim, multiplier=6)
 
@@ -52,7 +52,7 @@ def main(n_batch: int, threshold: float = 0.085):
             pbar.update(1)
             pbar.refresh()
 
-        if count >= 5000:
+        if count >= n_samples:
             break
 
     pbar.close()
@@ -75,7 +75,7 @@ def check_defects_size(img_path: Path) -> float:
 
 
 if __name__ == "__main__":
-    main(n_batch=2)
+    main(n_batch=9)
     # print(
     #     check_defects_size(
     #         Path("/home/tommaso/git_workspace/AutoDFTB/tmp/graphene_15228.png")

@@ -42,38 +42,42 @@ def main(args):
     files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
     for file in tqdm(files):
         check_file(file)
-        try:
-            check_file(json_dir.joinpath(f"{file.stem}.json"))
-        except:
-            continue
+        check_file(json_dir.joinpath(f"{file.stem}.json"))
+
         with open_dict(args):
             args.xyz_file = str(file)
             args.json_file = str(json_dir.joinpath(f"{file.stem}.json"))
 
-        Path(args.slurm_output).joinpath(file.stem).mkdir(parents=True, exist_ok=True)
-        executor = submitit.AutoExecutor(
-            folder=str(Path(args.slurm_output).joinpath(file.stem)),
-            slurm_max_num_timeout=30,
-        )
-
-        executor.update_parameters(
-            mem_gb=0 if not args.slurm_mem else args.slurm_mem,
-            tasks_per_node=1,
-            cpus_per_task=2 if not args.slurm_ncpus else args.slurm_ncpus,
-            timeout_min=args.slurm_timeout,
-            slurm_partition=args.slurm_partition,
-            slurm_exclude=args.slurm_exclude,
-        )
-
-        if args.slurm_nodelist:
-            executor.update_parameters(
-                slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
+        if args.slurm:
+            Path(args.slurm_output).joinpath(file.stem).mkdir(
+                parents=True, exist_ok=True
+            )
+            executor = submitit.AutoExecutor(
+                folder=str(Path(args.slurm_output).joinpath(file.stem)),
+                slurm_max_num_timeout=30,
             )
 
-        executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
-        slurm_auto_dftb = SLURM_STM(args)
-        job = executor.submit(slurm_auto_dftb)
-        print(f"Submitted job_id: {job.job_id}")
+            executor.update_parameters(
+                mem_gb=0 if not args.slurm_mem else args.slurm_mem,
+                tasks_per_node=1,
+                cpus_per_task=2 if not args.slurm_ncpus else args.slurm_ncpus,
+                timeout_min=args.slurm_timeout,
+                slurm_partition=args.slurm_partition,
+                slurm_exclude=args.slurm_exclude,
+            )
+
+            if args.slurm_nodelist:
+                executor.update_parameters(
+                    slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
+                )
+
+            executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
+            slurm_auto_dftb = SLURM_STM(args)
+            job = executor.submit(slurm_auto_dftb)
+            print(f"Submitted job_id: {job.job_id}")
+
+        else:
+            generate_stm_images(args)
 
 
 def generate_stm_images(args):
