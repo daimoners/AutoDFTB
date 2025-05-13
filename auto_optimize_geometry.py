@@ -61,7 +61,27 @@ def main(args):
     else:
         already_done = []
         files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
+    
+    if args.scheduler == "slurm":
+        run_slurm(files, args, working_dir)
+    elif args.scheduler == "local":
+        run_local(files, args, working_dir)
+    else:
+        print(f"Scheduler '{args.scheduler}' not recognized. Valid options: [slurm, local]")
+        return
 
+
+def run_local(files, args, working_dir):
+    for file in tqdm(files):
+        local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
+        local_working_dir.mkdir(exist_ok=True, parents=True)
+        with open_dict(args):
+            args.working_dir = str(local_working_dir)
+            args.file = str(file)
+
+        optimize_geom(args)
+        
+def run_slurm(files, args, working_dir):
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
@@ -93,7 +113,6 @@ def main(args):
         slurm_auto_dftb = SLURM_Transport(args)
         job = executor.submit(slurm_auto_dftb)
         print(f"Submitted job_id: {job.job_id}")
-
 
 def optimize_geom(args):
     # === Get hydra config paths === #
