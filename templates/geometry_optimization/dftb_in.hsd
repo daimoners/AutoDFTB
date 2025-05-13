@@ -17,7 +17,7 @@ Driver = GeometryOptimization {
 Hamiltonian = DFTB {
     Scc = No
     SlaterKosterFiles = Type2FileNames {
-    Prefix = '/home/tommaso/Applications/dftbplus/slakos/pbc-0-3/'
+    Prefix = '/home/mario/apps/dftbplus/slakos/pbc-0-3/'
     Separator = "-"
     Suffix = ".skf"
     }
