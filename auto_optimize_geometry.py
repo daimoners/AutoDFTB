@@ -28,7 +28,7 @@ except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
 
 
-class SLURM_Transport:
+class SLURM_Geometry:
     def __init__(self, args):
         self.args = args
 
@@ -38,6 +38,13 @@ class SLURM_Transport:
 
 @hydra.main(version_base="1.2", config_path="config", config_name="optimize_geometry")
 def main(args):
+    """
+    Main entry point for geometry optimization.
+
+    Depending on the scheduler type (slurm/local), distributes the xyz files 
+    for DFTB+ optimization either locally or through a SLURM job scheduler.
+    """
+    
     if args.verbose:
         ic.enable()
     else:
@@ -48,7 +55,8 @@ def main(args):
     check_dir(xyz_dir)
     working_dir = Path(args.working_dir)
     out_path = Path(args.xyz_dir_fixed)
-
+    
+    # === Filter already processed files === #
     if out_path.is_dir():
         already_done = [
             f.stem[:-4] for f in out_path.iterdir() if f.suffix.lower() == ".xyz"
@@ -61,7 +69,8 @@ def main(args):
     else:
         already_done = []
         files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
-    
+        
+    # === Choose execution strategy === #
     if args.scheduler == "slurm":
         run_slurm(files, args, working_dir)
     elif args.scheduler == "local":
@@ -72,6 +81,9 @@ def main(args):
 
 
 def run_local(files, args, working_dir):
+    """
+    Processes all files locally by calling `optimize_geom()` sequentially.
+    """
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
@@ -82,6 +94,10 @@ def run_local(files, args, working_dir):
         optimize_geom(args)
         
 def run_slurm(files, args, working_dir):
+    """
+    Submits geometry optimization jobs using SLURM via submitit.
+    Each xyz file is submitted as an individual job.
+    """
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
@@ -110,12 +126,21 @@ def run_slurm(files, args, working_dir):
             )
 
         executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
-        slurm_auto_dftb = SLURM_Transport(args)
+        slurm_auto_dftb = SLURM_Geometry(args)
         job = executor.submit(slurm_auto_dftb)
         print(f"Submitted job_id: {job.job_id}")
 
 def optimize_geom(args):
-    # === Get hydra config paths === #
+    """
+    Performs full geometry optimization workflow for a single xyz file.
+
+    This includes:
+    - Preparing the input (POSCAR, DFTB+ input)
+    - Running DFTB+
+    - Post-processing output files
+    - Geometry validation and cleanup
+    """
+        
     dftb_bin_path = Path(args.dftb_bin_path)
     working_dir = Path(args.working_dir)
     file = Path(args.file)
@@ -145,6 +170,8 @@ def optimize_geom(args):
         json_output_path=fixed_path.joinpath(f"{file.stem}_opt.json"),
         custom_name=file.stem,
     )
+    # === Check convergence === #
+
     if not check_geometry_convergence(
         Path(args.package_path).joinpath(args.slurm_output, file.stem)
     ):

@@ -75,8 +75,36 @@ def main(args):
         if (f.suffix.lower() == ".poscar" and f.stem not in already_done)
     ]
     ic(f"Submitting {len(files)} simulations...")
-    for file in files:
-        local_working_dir = working_dir.joinpath(f"{working_dir.stem}_{file.stem}")
+    
+    # === Choose execution strategy === #
+    if args.scheduler == "slurm":
+        run_slurm(files, args, working_dir)
+    elif args.scheduler == "local":
+        run_local(files, args, working_dir)
+    else:
+        print(f"Scheduler '{args.scheduler}' not recognized. Valid options: [slurm, local]")
+        return
+
+def run_local(files, args, working_dir):
+    """
+    Processes all files locally by calling `dftb()` sequentially.
+    """
+    for file in tqdm(files):
+        local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
+        local_working_dir.mkdir(exist_ok=True, parents=True)
+        with open_dict(args):
+            args.working_dir = str(local_working_dir)
+            args.file = str(file)
+
+        dftb(args)
+
+def run_slurm(files, args, working_dir):
+    """
+    Submits DFTB+ jobs using SLURM via submitit.
+    Each POSCAR file is submitted as an individual job.
+    """
+    for file in tqdm(files):
+        local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
         with open_dict(args):
             args.working_dir = str(local_working_dir)
@@ -106,8 +134,7 @@ def main(args):
         slurm_auto_dftb = SLURM_AutoDFTB(args)
         job = executor.submit(slurm_auto_dftb)
         print(f"Submitted job_id: {job.job_id}")
-
-
+        
 def dftb(args):
     # === Get hydra config paths === #
     dftb_bin_path = Path(args.dftb_bin_path)
@@ -118,7 +145,7 @@ def dftb(args):
     file = Path(args.file)
 
     # === Start DFTB+ simulations === #
-
+    
     # === Prepare and launch E0 simulation === #
     ic(f"Prepare and launch E0 simulation for {file.name}...")
     shutil.copy(file, working_dir.joinpath(file.name))

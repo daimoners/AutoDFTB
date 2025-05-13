@@ -34,4 +34,4 @@ slurm_exclude:
 # VERBOSITY
 verbose: True
 
-scheduler: sluuu
+scheduler: slurm
