@@ -21,6 +21,8 @@ grafene_perfetto/
 !templates/**/*.hsd
 !optimized_perfect_graphene/*
 !optimized_perfect_graphene/data_utils/*
+!test_xyz/*.xyz
+
 TODO.md
 prova*/
 *.csv

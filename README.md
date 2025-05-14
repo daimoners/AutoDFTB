@@ -20,12 +20,12 @@ Figure 1.: a) HDF5 dataset generation workflow, b) Distribution of the number of
 * create env with `conda create -n <env_name> python==3.10.13`
 * Install the requirements `pip install  -r requirements.txt`
 * Download the binary precompiled of dftb+ from `https://github.com/dftbplus/dftbplus/releases`
-Ecco una versione corretta e più chiara della nota in inglese britannico:
 
 
 > **NOTE:** Each step has its own configuration file to ensure modularity. When launching a specific step, remember to update the `package_path` in the corresponding config file.
 For example, **Step 1** runs a Python script called `fix_xyz_dataset.py`, which uses the associated configuration file `config/fix_xyz_dataset.yml`.
 
+> For testing all the workflow you can use files in the test_xyz
 
 ## STEP 1: Fix xyz files
 To ensure relevance to experimental conditions, structures with an in-plane carbon atom density of at least ~78% of pristine graphene were selected. From these, 50,000 structures were chosen for the reference dataset (see Fig. 1b). To minimise edge effects in transport simulations, the largest defect in each flake was centred, and the flake was repositioned so that the atom with the lowest x and y coordinates was at (0, 0).
@@ -161,7 +161,7 @@ The hierarchical structure of the h5 file can be seen in the Figure 2c, the tabl
 
 Table 1. Properties included in the HDF5 dataset. Each property is denoted by a symbol, which includes its units and dimensions (N is the number of atoms), and can be located within the HDF5 files using the corresponding HDF5 keys. Properties are categorized into distinct types: structural (S), molecular (M), atom-in-a-molecule (A), ground-state (G), and response (R).
 
-Please if you use this workflow cite: 
+
 > **Citation**
 If you use this dataset, please cite it as:
 
