@@ -122,8 +122,56 @@ def main(args):
         slurm_auto_dftb = SLURM_AutoDFTB(args)
         job = executor.submit(slurm_auto_dftb)
         print(f"Submitted job_id: {job.job_id}")
+        
+def run_local(files, args, working_dir):
+     for file in files:
+        setupgeom_working_dir = working_dir.joinpath(f"{file.stem}_setupgeom")
+        setupgeom_working_dir.mkdir(exist_ok=True, parents=True)
+        contact_working_dir = working_dir.joinpath(f"{file.stem}_contact")
+        contact_working_dir.mkdir(exist_ok=True, parents=True)
+        transport_working_dir = working_dir.joinpath(f"{file.stem}_transport")
+        transport_working_dir.mkdir(exist_ok=True, parents=True)
+        transport(args)
+        
+def run_slurm(files, args, working_dir):
+    for file in files:
+        setupgeom_working_dir = working_dir.joinpath(f"{file.stem}_setupgeom")
+        setupgeom_working_dir.mkdir(exist_ok=True, parents=True)
+        contact_working_dir = working_dir.joinpath(f"{file.stem}_contact")
+        contact_working_dir.mkdir(exist_ok=True, parents=True)
+        transport_working_dir = working_dir.joinpath(f"{file.stem}_transport")
+        transport_working_dir.mkdir(exist_ok=True, parents=True)
+        with open_dict(args):
+            args.setupgeom_working_dir = str(setupgeom_working_dir)
+            args.contact_working_dir = str(contact_working_dir)
+            args.transport_working_dir = str(transport_working_dir)
+            args.file = str(file)
 
+        Path(args.slurm_output).mkdir(parents=True, exist_ok=True)
+        executor = submitit.AutoExecutor(
+            folder=str(Path(args.slurm_output).joinpath(file.stem)),
+            slurm_max_num_timeout=30,
+        )
 
+        executor.update_parameters(
+            mem_gb=0 if not args.slurm_mem else args.slurm_mem,
+            tasks_per_node=1,
+            cpus_per_task=2 if not args.slurm_ncpus else args.slurm_ncpus,
+            timeout_min=args.slurm_timeout,
+            slurm_partition=args.slurm_partition,
+            slurm_exclude=args.slurm_exclude,
+        )
+
+        if args.slurm_nodelist:
+            executor.update_parameters(
+                slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
+            )
+
+        executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
+        slurm_auto_dftb = SLURM_AutoDFTB(args)
+        job = executor.submit(slurm_auto_dftb)
+        print(f"Submitted job_id: {job.job_id}")
+        
 def transport(args):
     # === Get hydra config paths === #
     dftb_bin_path = Path(args.dftb_bin_path)

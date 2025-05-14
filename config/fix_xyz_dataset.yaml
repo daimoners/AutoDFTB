@@ -1,7 +1,7 @@
 package_path: /home/mario/jobs/git_folders/AutoDFTB
-xyz_files_path: ${package_path}/xyz_files
-out_path: ${package_path}/data_batch_2/xyz_files_fixed
-nanoribbon_path: ${package_path}/nanoribbon.xyz
+xyz_files_path: ${package_path}/test_xyz
+out_path: ${package_path}/test_batch/xyz_files_fixed
+nanoribbon_path: ${package_path}/fixed_xyz/nanoribbon.xyz
 
 cell: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]
 contact_vector: 2.459512143373903

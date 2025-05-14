@@ -3,9 +3,9 @@ package_path: /home/mario/jobs/git_folders/AutoDFTB
 dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
 slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
 
-xyz_dir: ${package_path}/data_batch_2/dftb/xyz_files_fixed_opt
-poscar_dir: ${package_path}/data_batch_2/dftb/poscar_files
-json_dir: ${package_path}/data_batch_2/dftb/json_files
+xyz_dir: ${package_path}/test_batch/dftb/xyz_files_fixed_opt
+poscar_dir: ${package_path}/test_batch/dftb/poscar_files
+json_dir: ${package_path}/test_batch/dftb/json_files
 working_dir: ${package_path}/tmp
 
 # BOX SIZE
@@ -33,4 +33,4 @@ slurm_exclude:
 
 # VERBOSITY
 verbose: True
-scheduler: local
+scheduler: slurm

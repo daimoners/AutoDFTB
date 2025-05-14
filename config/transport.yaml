@@ -1,13 +1,13 @@
 # PATHS
-package_path: /home/tommaso/git_workspace/AutoDFTB
-dftb_bin_path: /home/tommaso/Applications/dftbplus/bin/dftb+
-slakos: /home/tommaso/Applications/dftbplus/slakos/pbc-0-3
-setupgeom_bin_path: /home/tommaso/Applications/dftbplus/bin/setupgeom
+package_path: /home/mario/jobs/git_folders/AutoDFTB
+dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
+slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
+setupgeom_bin_path: /home/mario/app/dftbplus/bin/setupgeom
 working_dir: ${package_path}/tmp
 
-electrodes_dir: ${package_path}/data_new/transport/electrodes
-gen_dir: ${package_path}/data_new/transport/gen_files
-transport_output: ${package_path}/data_new/transport/transport_output
+electrodes_dir: ${package_path}/test_batch/transport/electrodes
+gen_dir: ${package_path}/data_new/transport/electrodes
+transport_output: ${package_path}/test_batch/transport/transport_output
 
 # BOX SIZE
 periodic: True
@@ -36,13 +36,13 @@ tunnelinganddos:
   compute_regions: True
 
 #STM
-compute_stm: False
+compute_stm: True
 bias: 0.35
 resolution: 256
 tau: 5
 scan_h: 1
-stm_output: ${package_path}/data_new/transport/stm_images
-xyz_dir: ${package_path}/data_new/transport/electrodes
+stm_output: ${package_path}/test_batch/transport/stm_images
+xyz_dir: ${package_path}/test_batch/transport/electrodes
 save_npy: False
 save_png: True
 
