@@ -11,72 +11,75 @@ except Exception as e:
 
 
 def compute_inertia_tensor(xyz_file: Path):
-    masse_atomiche = {
+    # Atomic masses for common elements (in atomic mass units)
+    atomic_masses = {
         "H": 1.00784,
         "C": 12.011,
         "O": 15.999,
-        # Aggiungere altre masse atomiche se necessario
     }
 
-    def leggi_file_xyz(filename):
+    def read_xyz_file(filename):
+        """Read atomic symbols and coordinates from an XYZ file."""
         with open(filename, "r") as f:
             lines = f.readlines()
 
-        N = int(lines[0].strip())  # Numero di atomi
-        commento = lines[1].strip()
+        N = int(lines[0].strip())  # Number of atoms
+        comment_line = lines[1].strip()  # Optional comment line (ignored here)
 
-        atomi = []
-        coordinate = []
+        atoms = []
+        coordinates = []
 
         for line in lines[2 : 2 + N]:
             parts = line.split()
-            atomo = parts[0]
+            atom = parts[0]
             x, y, z = map(float, parts[1:])
-            atomi.append(atomo)
-            coordinate.append([x, y, z])
+            atoms.append(atom)
+            coordinates.append([x, y, z])
 
-        return atomi, np.array(coordinate)
+        return atoms, np.array(coordinates)
 
-    def calcola_baricentro(atomi, coordinate):
-        M = sum(masse_atomiche[atomo] for atomo in atomi)
-        R_cm = (
-            sum(masse_atomiche[atomi[i]] * coordinate[i] for i in range(len(atomi))) / M
-        )
+    def compute_center_of_mass(atoms, coordinates):
+        """Calculate the center of mass of the molecule."""
+        total_mass = sum(atomic_masses[atom] for atom in atoms)
+        R_cm = sum(
+            atomic_masses[atoms[i]] * coordinates[i] for i in range(len(atoms))
+        ) / total_mass
         return R_cm
 
-    def calcola_tensore_di_inerzia(atomi, coordinate):
-        coordinate_traslate = coordinate - calcola_baricentro(atomi, coordinate)
+    def compute_inertia_tensor_matrix(atoms, coordinates):
+        """Compute the inertia tensor with respect to the center of mass."""
+        translated_coords = coordinates - compute_center_of_mass(atoms, coordinates)
 
         I = np.zeros((3, 3))
 
-        for i, atomo in enumerate(atomi):
-            m = masse_atomiche[atomo]
-            x, y, z = coordinate_traslate[i]
+        for i, atom in enumerate(atoms):
+            m = atomic_masses[atom]
+            x, y, z = translated_coords[i]
 
-            # Elementi diagonali
+            # Diagonal elements
             I[0, 0] += m * (y**2 + z**2)
             I[1, 1] += m * (x**2 + z**2)
             I[2, 2] += m * (x**2 + y**2)
 
-            # Elementi fuori diagonale
+            # Off-diagonal elements (negative terms)
             I[0, 1] -= m * x * y
             I[0, 2] -= m * x * z
             I[1, 2] -= m * y * z
 
-        # Ixy = Iyx, Ixz = Izx, Iyz = Izy
+        # Fill symmetric entries
         I[1, 0] = I[0, 1]
         I[2, 0] = I[0, 2]
         I[2, 1] = I[1, 2]
 
         return I
 
-    # Leggere il file XYZ
-    atomi, coordinate = leggi_file_xyz(str(xyz_file))
+    # Read atomic structure from the XYZ file
+    atoms, coordinates = read_xyz_file(str(xyz_file))
 
-    # Calcolare il tensore del momento di inerzia
-    tensore_inerzia = calcola_tensore_di_inerzia(atomi, coordinate)
+    # Compute the inertia tensor
+    inertia_tensor = compute_inertia_tensor_matrix(atoms, coordinates)
 
-    return tensore_inerzia
+    return inertia_tensor
 
 
 def read_from_xyz_file(file_path: Path):
