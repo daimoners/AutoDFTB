@@ -41,7 +41,7 @@ This process is automatically carried out by `fix_xyz_dataset.py`.
 Now we have to optimize the geometry of the fixed flakes, obtained from the previous point. To do so we firstly get the standard cell, by manually optimizing the geometry and the lattice of a perfect graphene flakes with the same dimension of the flakes in the dataset.
 Once the standard cell is known, we optimize the geometry with a fixed lattice for all the flakes in the dataset by running `auto_optimize_geometry.py`.
 
->**NOTE:** This workflow, starting from the geometry optimisation step, is designed to be run with SLURM, which is the typical way to manage multiple jobs on a cluster. If you wish to run it locally, simply change the scheduler option in all the files within the `config` folder, selecting one of the available options: `[local, slurm]`.
+>**NOTE:** This workflow, starting from the geometry optimisation step, is designed to be run with SLURM, which is the typical way to manage multiple jobs on a cluster. If you wish to run it locally, simply change the scheduler option in all the files within the `config` folder, selecting one of the available options:[local, slurm]`.
 
 ## STEP 3: DFTB Simulations
 All electronic properties calculations were performed with the DFTB+ package Prior to electronic property calculations, geometry optimizations were performed to ensure stable configurations of the DG flakes. This step was crucial to minimize the total energy and remove any spurious forces acting on the atoms.
