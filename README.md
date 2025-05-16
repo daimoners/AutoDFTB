@@ -5,7 +5,7 @@
 
 ---
 
-# Workflow
+# A FAIR-Compliant Dataset of Simulated STM, Electronic and Transport Properties of Defected Graphene
 
 ## Introduction
 This study investigates how atomic-scale defects affect the electronic behaviour of graphene, aiming to support the design of nanoscale devices with customised properties. Building on an existing repository of defective graphene structures, a new dataset has been created using high-throughput automated workflows and Density Functional Tight Binding (DFTB) calculations using DFTB+. The dataset includes key electronic properties—such as electron affinity, ionisation potential, total energy, band gap, and Fermi energy—as well as simulated Scanning Tunnelling Microscopy (STM) images and quantum transport properties obtained via the Non-Equilibrium Green’s Function (NEGF) method. Fully FAIR-compliant, the dataset is designed to support multiscale workflows, enable comparison with experimental data, and foster AI-driven research in nanographene.
@@ -21,11 +21,26 @@ Figure 1.: a) HDF5 dataset generation workflow, b) Distribution of the number of
 * Install the requirements `pip install  -r requirements.txt`
 * Download the binary precompiled of dftb+ from `https://github.com/dftbplus/dftbplus/releases`
 
-
 > **NOTE:** Each step has its own configuration file to ensure modularity. When launching a specific step, remember to update the `package_path` in the corresponding config file.
 For example, **Step 1** runs a Python script called `fix_xyz_dataset.py`, which uses the associated configuration file `config/fix_xyz_dataset.yml`.
 
 > For testing all the workflow you can use files in the test_xyz
+
+If you prefer to use a container as the environment, a containerized implementation of the application is available in the `dockerfile` folder.
+
+To build the image from the project root directory, run:
+
+```bash
+podman build -t app_name -f dockerfile/Dockerfile .
+```
+Once the image has been built, you can run the container and work with the example files using:
+
+```bash
+podman run -it --rm \
+  -v ./fixed_xyz:/applications/fixed_xyz \
+  -v ./config:/applications/config \
+  app_name:latest
+```
 
 ## STEP 1: Fix xyz files
 To ensure relevance to experimental conditions, structures with an in-plane carbon atom density of at least ~78% of pristine graphene were selected. From these, 50,000 structures were chosen for the reference dataset (see Fig. 1b). To minimise edge effects in transport simulations, the largest defect in each flake was centred, and the flake was repositioned so that the atom with the lowest x and y coordinates was at (0, 0).
@@ -130,9 +145,16 @@ For this step use `auto_transport.py`
 ## STEP 6: STM
 To compute the local density of states (LDOS) and scanning tunneling microscopy (STM) images, we used input files for density functional tight-binding (DFTB) simulations with DFTB+. Based on the Tersoff-Hamann theory, which models the constant-height mode of a scanning tunneling microscope, we visualized the electronic structure of defective graphene flakes. This approach provided detailed insights into how defects influence localized electronic properties.
 
-The input configuration specifies the system’s geometry and transport settings, including the arrangement of the device and its contacts. For LDOS calculations, the system was partitioned into distinct regions corresponding to individual atoms. This method allows the computation of the density of states localized at each atom, offering a high-resolution profile of the local electronic environment—an essential feature for accurately capturing the LDOS.
+The input configuration specifies the system’s geometry and transport settings, including the arrangement of the device and its contacts. For LDOS calculations, the system was partitioned into distinct regions corresponding to individual atoms. This method allows the computation of the density of states localized at each atom, offering a high-resolution profile of the local electronic environment an essential feature for accurately capturing the LDOS.
+The equation behind the stm image is:
 
+$$I = \int_{E_{\text{min}}}^{E_{\text{max}}} \rho(E) \, dE$$
+$$ \text{img}(i, j) = \sum_{a=1}^{N} - I_a \cdot \exp\left( -\tau \cdot \sqrt{(x_i - x_a)^2 + (y_j - y_a)^2 + (z_h - z_a)^2} \right) $$
 
+where $I_a $ is the tunneling current of atom  $a$, $\tau$ is a decay constant, and $z_h$ represents the scan height. The resulting STM image reflects the spatial distribution of the tunneling current over the surface, providing atomic-resolution information about the sample.
+
+To run this step, execute `auto_stm.py`.
+> **Note:** This step can be run together with `auto_transport.py` by setting the `compute_stm` option to `True` in the configuration file.
 
 ## STEP 7: HD5 Dataset
 Once all steps are completed, the HDF5 files can be generated through two main stages. As a first approximation, a CSV file containing all the computed properties can be created using the dedicated function available in `paper/csv_generator.ipynb`. This notebook includes all the necessary functions to generate the CSV file, which can then be used in other learning pipelines. It also provides an initial approach to data visualisation, useful for understanding the distribution of the various calculated properties.
