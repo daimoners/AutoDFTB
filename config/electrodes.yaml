@@ -38,4 +38,4 @@ slurm_exclude:
 
 # VERBOSITY
 verbose: True
-scheduler: slurm
+scheduler: local

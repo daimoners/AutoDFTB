@@ -87,9 +87,11 @@ def run_local(files, args, working_dir):
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
+
         with open_dict(args):
             args.working_dir = str(local_working_dir)
             args.file = str(file)
+        #Path(args.slurm_output).joinpath(file.stem).mkdir(parents=True, exist_ok=True)
 
         optimize_geom(args)
         
@@ -160,7 +162,21 @@ def optimize_geom(args):
         default_box_size=box_size,
     )
     prepare_dftbplus_input(args, working_dir.joinpath(f"{file.stem}.POSCAR"))
-    launch_bin(dftb_bin_path, working_dir, verbose=args.verbose)
+    base_output_dir = Path(args.package_path).joinpath(args.slurm_output)
+    base_output_dir.mkdir(exist_ok=True, parents=True)
+
+    local_path = base_output_dir.joinpath(file.stem)
+    local_path.mkdir(exist_ok=True, parents=True)
+    print(f"Local path: {local_path}")
+    
+    if args.scheduler == "slurm":
+        write_out_file = None
+    elif args.scheduler == "local":
+        write_out_file = str(local_path.joinpath(file.stem)) + ".out"
+    else:
+        raise ValueError(f"Scheduler {args.scheduler} not supported")
+    
+    launch_bin(dftb_bin_path, working_dir,write_out_file=write_out_file, verbose=args.verbose)
     shutil.copy(
         working_dir.joinpath(f"opt_{file.stem}.xyz"),
         fixed_path.joinpath(f"{file.stem}_opt.xyz"),
@@ -177,8 +193,8 @@ def optimize_geom(args):
     ):
         print(f"Warning, Geometry did NOT converge for {file.stem}!")
         if args.remove_if_not_converged:
-            os.remove(str(fixed_path.joinpath(file.name)))
-            os.remove(str(fixed_path.joinpath(f"{file.stem}.json")))
+            os.remove(str(fixed_path.joinpath(file.stem + "_opt.xyz")))
+            os.remove(str(fixed_path.joinpath(f"{file.stem}_opt.json")))
             shutil.rmtree(working_dir)
             return
 

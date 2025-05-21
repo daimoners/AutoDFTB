@@ -6,7 +6,7 @@ setupgeom_bin_path: /home/mario/app/dftbplus/bin/setupgeom
 working_dir: ${package_path}/tmp
 
 electrodes_dir: ${package_path}/test_batch/transport/electrodes
-gen_dir: ${package_path}/data_new/transport/electrodes
+gen_dir: ${package_path}/test_batch/transport/gen_files
 transport_output: ${package_path}/test_batch/transport/transport_output
 
 # BOX SIZE
@@ -55,6 +55,8 @@ slurm_partition: long
 slurm_timeout: 2800
 slurm_output: outputs/slurm_out
 slurm_exclude:
+
+scheduler: local
 
 # VERBOSITY
 verbose: True

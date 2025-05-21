@@ -70,6 +70,7 @@ def main(args):
     else:
         already_done = []
         files = [f for f in electrodes_dir.iterdir() if f.suffix.lower() == ".xyz"]
+
     for file in tqdm(files):
         xyz2gen(
             file,
@@ -85,7 +86,16 @@ def main(args):
         if (f.suffix.lower() == ".gen" and f.stem not in already_done)
     ]
     ic(f"Submitting {len(files)} simulations...")
-    for file in files:
+    if args.scheduler == "slurm":
+        run_slurm(files, args, working_dir)
+    elif args.scheduler == "local":
+        run_local(files, args, working_dir)
+    else:
+        print(f"Scheduler '{args.scheduler}' not recognized. Valid options: [slurm, local]")
+        return
+        
+def run_local(files, args, working_dir):
+     for file in files:
         setupgeom_working_dir = working_dir.joinpath(f"{file.stem}_setupgeom")
         setupgeom_working_dir.mkdir(exist_ok=True, parents=True)
         contact_working_dir = working_dir.joinpath(f"{file.stem}_contact")
@@ -97,40 +107,6 @@ def main(args):
             args.contact_working_dir = str(contact_working_dir)
             args.transport_working_dir = str(transport_working_dir)
             args.file = str(file)
-
-        Path(args.slurm_output).mkdir(parents=True, exist_ok=True)
-        executor = submitit.AutoExecutor(
-            folder=str(Path(args.slurm_output).joinpath(file.stem)),
-            slurm_max_num_timeout=30,
-        )
-
-        executor.update_parameters(
-            mem_gb=0 if not args.slurm_mem else args.slurm_mem,
-            tasks_per_node=1,
-            cpus_per_task=2 if not args.slurm_ncpus else args.slurm_ncpus,
-            timeout_min=args.slurm_timeout,
-            slurm_partition=args.slurm_partition,
-            slurm_exclude=args.slurm_exclude,
-        )
-
-        if args.slurm_nodelist:
-            executor.update_parameters(
-                slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
-            )
-
-        executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
-        slurm_auto_dftb = SLURM_AutoDFTB(args)
-        job = executor.submit(slurm_auto_dftb)
-        print(f"Submitted job_id: {job.job_id}")
-        
-def run_local(files, args, working_dir):
-     for file in files:
-        setupgeom_working_dir = working_dir.joinpath(f"{file.stem}_setupgeom")
-        setupgeom_working_dir.mkdir(exist_ok=True, parents=True)
-        contact_working_dir = working_dir.joinpath(f"{file.stem}_contact")
-        contact_working_dir.mkdir(exist_ok=True, parents=True)
-        transport_working_dir = working_dir.joinpath(f"{file.stem}_transport")
-        transport_working_dir.mkdir(exist_ok=True, parents=True)
         transport(args)
         
 def run_slurm(files, args, working_dir):

@@ -209,7 +209,7 @@ def check_geometry_convergence(slurm_out: Path):
         raise FileNotFoundError
 
     files = [f for f in slurm_out.iterdir() if f.suffix.lower() == ".out"]
-
+    print(files)
     found = False
 
     with open(str(files[0]), "r") as file:

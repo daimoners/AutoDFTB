@@ -57,7 +57,6 @@ def main(args):
         ]
     else:
         files = [f for f in xyz_dir.iterdir() if f.suffix.lower() == ".xyz"]
-
     if args.scheduler == "slurm":
         run_slurm(files, args, working_dir)
     elif args.scheduler == "local":
@@ -121,12 +120,12 @@ def generate_transport_devices(args):
     dftb_bin_path = Path(args.dftb_bin_path)
     working_dir = Path(args.working_dir)
     file = Path(args.file)
+
     electrodes_path = Path(args.electrodes_dir)
     electrodes_path.mkdir(exist_ok=True, parents=True)
     box_size = list(args.box_size)
     electrode_path = args.electrode_path
     electrode_cell = args.electrode_cell
-
     shutil.copy(file, working_dir.joinpath(file.name))
 
     atom_range = generate_electrode(
@@ -148,8 +147,22 @@ def generate_transport_devices(args):
     )
     with open_dict(args):
         args.moved_atoms = atom_range["device"]
+    
     prepare_dftbplus_input(args, working_dir.joinpath(f"{file.stem}_e.POSCAR"))
-    launch_bin(dftb_bin_path, working_dir, verbose=args.verbose)
+    base_output_dir = Path(args.package_path).joinpath(args.slurm_output)
+    base_output_dir.mkdir(exist_ok=True, parents=True)
+
+    local_path = base_output_dir.joinpath(file.stem)
+    local_path.mkdir(exist_ok=True, parents=True)
+    
+    if args.scheduler == "slurm":
+        write_out_file = None
+    elif args.scheduler == "local":
+        write_out_file = str(local_path.joinpath(file.stem)) + ".out"
+    else:
+        raise ValueError(f"Scheduler {args.scheduler} not supported")
+    launch_bin(dftb_bin_path, working_dir, write_out_file=write_out_file, verbose=args.verbose)
+    
     if not check_geometry_convergence(
         Path(args.package_path).joinpath(args.slurm_output, file.stem)
     ):

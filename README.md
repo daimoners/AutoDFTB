@@ -20,6 +20,8 @@ Figure 1.: a) HDF5 dataset generation workflow, b) Distribution of the number of
 * create env with `conda create -n <env_name> python==3.10.13`
 * Install the requirements `pip install  -r requirements.txt`
 * Download the binary precompiled of dftb+ from `https://github.com/dftbplus/dftbplus/releases`
+* Extract the zip file in a folder of your choice
+* All workflow configuration files will require the paths to `/my_path/dftbplus/bin/dftb+` and `my_path/dftbplus/slakos/pbc-0-3` , `my_path/dftbplus/bin/setupgeom`
 
 > **NOTE:** Each step has its own configuration file to ensure modularity. When launching a specific step, remember to update the `package_path` in the corresponding config file.
 For example, **Step 1** runs a Python script called `fix_xyz_dataset.py`, which uses the associated configuration file `config/fix_xyz_dataset.yml`.
@@ -201,4 +203,8 @@ If you use this dataset, please cite it as:
   doi       = {10.5281/zenodo.13760109},
   url       = {https://doi.org/10.5281/zenodo.13760109}
 }
+```
 
+> TODO: 
+* Quando e' presente il folder slurm_out quello che succede e che quando viene lanciata lo stesso script viene verificato solo il primo job che e' stato lanciato, quindi se quello non era andato a convergenza il sistema prende quello come esempio. Questa cosa e' assolutamente da modificare.
+* gestire bene il local e lo slurm anche per auto_dftb, auto_transport e auto_stm
