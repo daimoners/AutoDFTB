@@ -20,6 +20,7 @@ Figure 1.: a) HDF5 dataset generation workflow, b) Distribution of the number of
 * create env with `conda create -n <env_name> python==3.10.13`
 * Install the requirements `pip install  -r requirements.txt`
 * Download the binary precompiled of dftb+ from `https://github.com/dftbplus/dftbplus/releases`
+* Download the inital parameter set from dftbparmas `https://github.com/dftbparams/pbc/releases`
 * Extract the zip file in a folder of your choice
 * All workflow configuration files will require the paths to `/my_path/dftbplus/bin/dftb+` and `my_path/dftbplus/slakos/pbc-0-3` , `my_path/dftbplus/bin/setupgeom`
 
