@@ -204,21 +204,53 @@ def generate_electrode(
     return atom_range
 
 
-def check_geometry_convergence(slurm_out: Path):
+# def check_geometry_convergence(slurm_out: Path):
+#     if not slurm_out.exists():
+#         raise FileNotFoundError
+
+#     files = [f for f in slurm_out.iterdir() if f.suffix.lower() == ".out"]
+#     print(files)
+#     found = False
+
+#     with open(str(files[0]), "r") as file:
+#         for line in file:
+#             match = re.search("Geometry converged", line)
+#             if match:
+#                 found = True
+
+#     return found
+
+
+def check_geometry_convergence(slurm_out: Path) -> bool:
     if not slurm_out.exists():
-        raise FileNotFoundError
+        raise FileNotFoundError(f"Path does not exist: {slurm_out}")
 
-    files = [f for f in slurm_out.iterdir() if f.suffix.lower() == ".out"]
-    print(files)
-    found = False
+    files = sorted(
+        [f for f in slurm_out.iterdir() if f.suffix.lower() == ".out"],
+        key=lambda f: f.stat().st_mtime,
+        reverse=True  # Più recenti prima
+)
+    
+    if not files:
+        print(f"No .out files found in {slurm_out}")
+        return False
 
-    with open(str(files[0]), "r") as file:
-        for line in file:
-            match = re.search("Geometry converged", line)
-            if match:
-                found = True
+    print(f"Checking the following .out files for convergence: {[f.name for f in files]}")
+    
+    for out_file in files:
+        try:
+            with open(out_file, "r") as file:
+                for line in file:
+                    if re.search("Geometry converged", line):
+                        print(f"Convergence found in file: {out_file.name}")
+                        return True
+        except Exception as e:
+            print(f"Error reading {out_file}: {e}")
+            continue
 
-    return found
+    print("No convergence found in any .out file.")
+    return False
+
 
 
 def cut_electrode(file_path: Path, out_path: Path, x_th: float):

@@ -1,9 +1,9 @@
 # PATHS
-package_path: /home/tommaso/git_workspace/AutoDFTB
+package_path: /home/mario/jobs/git_folders/AutoDFTB
 
-xyz_dir: ${package_path}/data/transport/devices
-json_dir: ${package_path}/data/transport/transport_output
-out_dir: ${package_path}/data/transport/stm_images_new
+xyz_dir: ${package_path}/test_batch/transport/electrodes
+json_dir: ${package_path}/test_batch/transport/transport_output
+out_dir: ${package_path}/test_batch/transport/stm_images_new
 
 # STM
 #fermi_energy: -4.62
@@ -26,3 +26,4 @@ slurm_exclude:
 
 # VERBOSITY
 verbose: True
+scheduler: local

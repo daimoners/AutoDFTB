@@ -5,13 +5,13 @@ try:
         check_file,
     )
     import hydra
-    from tqdm.rich import tqdm
+    from tqdm import tqdm
     from icecream import ic
     import submitit
     from omegaconf import open_dict
     from lib.stm_lib import StmSimulator
     import json
-
+    import shutil
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
 
@@ -30,7 +30,11 @@ def main(args):
         ic.enable()
     else:
         ic.disable()
-
+    save_path = Path(args.package_path).joinpath(args.slurm_output)
+    if save_path.exists():
+        print(f"[INFO] Cleaning existing slurm output directory: {save_path}")
+        shutil.rmtree(save_path)
+    save_path.mkdir(parents=True, exist_ok=True)
     # === Get hydra config paths === #
     xyz_dir = Path(args.xyz_dir)
     check_dir(xyz_dir)
@@ -48,7 +52,7 @@ def main(args):
             args.xyz_file = str(file)
             args.json_file = str(json_dir.joinpath(f"{file.stem}.json"))
 
-        if args.slurm:
+        if args.scheduler == "slurm":
             Path(args.slurm_output).joinpath(file.stem).mkdir(
                 parents=True, exist_ok=True
             )
@@ -76,7 +80,7 @@ def main(args):
             job = executor.submit(slurm_auto_dftb)
             print(f"Submitted job_id: {job.job_id}")
 
-        else:
+        elif args.scheduler == "local":
             generate_stm_images(args)
 
 

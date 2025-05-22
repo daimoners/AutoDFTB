@@ -5,7 +5,7 @@
 
 ---
 
-# A FAIR-Compliant Dataset of Simulated STM, Electronic and Transport Properties of Defected Graphene
+# A FAIR-Compliant Dataset of Simulated STM Images, Electronic, and Transport Properties of Defected Graphene Samples
 
 ## Introduction
 This study investigates how atomic-scale defects affect the electronic behaviour of graphene, aiming to support the design of nanoscale devices with customised properties. Building on an existing repository of defective graphene structures, a new dataset has been created using high-throughput automated workflows and Density Functional Tight Binding (DFTB) calculations using DFTB+. The dataset includes key electronic properties—such as electron affinity, ionisation potential, total energy, band gap, and Fermi energy—as well as simulated Scanning Tunnelling Microscopy (STM) images and quantum transport properties obtained via the Non-Equilibrium Green’s Function (NEGF) method. Fully FAIR-compliant, the dataset is designed to support multiscale workflows, enable comparison with experimental data, and foster AI-driven research in nanographene.
@@ -20,7 +20,7 @@ Figure 1.: a) HDF5 dataset generation workflow, b) Distribution of the number of
 * create env with `conda create -n <env_name> python==3.10.13`
 * Install the requirements `pip install  -r requirements.txt`
 * Download the binary precompiled of dftb+ from `https://github.com/dftbplus/dftbplus/releases`
-* Download the inital parameter set from dftbparmas `https://github.com/dftbparams/pbc/releases`
+* Download the inital parameter set from dftbparmas `https://github.com/dftbparams/pbc/releases` and chose the file `pbc-0-3.tar.xz'
 * Extract the zip file in a folder of your choice
 * All workflow configuration files will require the paths to `/my_path/dftbplus/bin/dftb+` and `my_path/dftbplus/slakos/pbc-0-3` , `my_path/dftbplus/bin/setupgeom`
 
@@ -45,26 +45,53 @@ podman run -it --rm \
   app_name:latest
 ```
 
-## STEP 1: Fix xyz files
-To ensure relevance to experimental conditions, structures with an in-plane carbon atom density of at least ~78% of pristine graphene were selected. From these, 50,000 structures were chosen for the reference dataset (see Fig. 1b). To minimise edge effects in transport simulations, the largest defect in each flake was centred, and the flake was repositioned so that the atom with the lowest x and y coordinates was at (0, 0).
+## ⚙️ Execution Mode: SLURM or Local
 
-As the original dataset's structures lacked the periodicity necessary to preserve graphene's aromaticity, two additional rows of carbon atoms in an armchair configuration were appended at both ends. This modification reinstates graphene’s intrinsic periodicity, which is crucial for maintaining its electronic properties—particularly in partially periodic systems used in device-level transport calculation.
-This process is automatically carried out by `fix_xyz_dataset.py`.
+> **📌 IMPORTANT:**  
+> This workflow is **designed to run on SLURM**, the standard job scheduler on HPC clusters.  
+> However, you can also run everything **locally**, with a few simple changes.
 
-`python fix_xyz_dataset.py`
+### Switch to local execution:
 
-> **NOTE:** This process works without DFTB+ and only requires the installation of the packages listed in the `requirements.txt`.
+1. Open the files in the `config/` folder.
+2. For each configuration file, set:
+   ```yaml
+   scheduler: local #slurm
+   ```
+> Be aware that `fix_xyz_dataset.yaml` can only be runned locally
+
+## STEP 1: Fix `.xyz` files
+To ensure relevance to experimental conditions, structures with an in-plane carbon atom density of at least ~78% of pristine graphene were selected. From these, 50,000 structures were chosen for the reference dataset (see Fig. 1b).
+
+To minimise edge effects in transport simulations:
+- The **largest defect** in each flake was centred;
+- The flake was repositioned so that the atom with the **lowest x and y coordinates** was set to (0, 0).
+
+Because the original dataset lacked the periodicity required to preserve graphene's aromaticity, **two extra rows of carbon atoms** in armchair configuration were appended at both ends.  
+This restores graphene’s intrinsic periodicity, which is crucial for maintaining its electronic properties—especially in **partially periodic** device-level transport calculations.
+
+This step is fully automated by:
+
+```bash
+python fix_xyz_dataset.py
+```
+
+> ⚠️ **Warning:** Before running this step, ensure that the configuration file at `/config/fix_xyz_dataset.yaml` is updated according to your setup.
+
+> **Note:** DFTB+ is not required for this step. You only need the Python packages listed in requirements.txt.
 
 ## STEP 2: Geometry optimization
 Now we have to optimize the geometry of the fixed flakes, obtained from the previous point. To do so we firstly get the standard cell, by manually optimizing the geometry and the lattice of a perfect graphene flakes with the same dimension of the flakes in the dataset.
-Once the standard cell is known, we optimize the geometry with a fixed lattice for all the flakes in the dataset by running `auto_optimize_geometry.py`.
-
->**NOTE:** This workflow, starting from the geometry optimisation step, is designed to be run with SLURM, which is the typical way to manage multiple jobs on a cluster. If you wish to run it locally, simply change the scheduler option in all the files within the `config` folder, selecting one of the available options:[local, slurm]`.
+Once the standard cell is known, we optimize the geometry with a fixed lattice for all the flakes in the dataset by running 
+```bash
+auto_optimize_geometry.py.
+```
+> ⚠️ **Warning:** Before running this step, ensure that the configuration file at `/config/optimize_geometry.yaml` is updated according to your setup.
 
 ## STEP 3: DFTB Simulations
 All electronic properties calculations were performed with the DFTB+ package Prior to electronic property calculations, geometry optimizations were performed to ensure stable configurations of the DG flakes. This step was crucial to minimize the total energy and remove any spurious forces acting on the atoms.
 
-Now we can launch `auto_dftb.py` on the fixed and optimized dataset to get some target properties, in the output we have a `flake_name_NUM.json` file with the properties below:
+Now we can launch `auto_dftb.py` on the fixed and optimized dataset to get some target properties. In the output we have a `flake_name_NUM.json` file with the properties below:
 
 | Property Name           | Unit              |
 |-------------------------|-------------------|
@@ -94,18 +121,21 @@ JSON file example:
     "band_gap_ev": -10.494999999998981
 }
 ```
+The json file can be found in the `json_dir` defined in the config `dftb.yml` 
 
 ![alt text](assets/h5.png)
 Figure 2.: a) Procedure in which the 2 PLs are connected to the flake, the source one in red and the drain one in blue b) STM image of the flake, plotted with the hot colormap c) Structure of the HDF5 file: the groups are represented in green, while the datasets, along with their respective attributes, are represented in red.
-
+> ⚠️ **Warning:** Before running this step, ensure that the configuration file at `/config/dftb.yaml` is updated according to your setup.
 ## STEP 4: Elctrodes generator
 
-Electron transport simulations were based on the Non-Equilibrium Green’s Function (NEGF) formalism, as
-implemented in DFTB To perform NEGF calculations on the DG structures, electrodes were attached at both ends of each DG sample to model the source and drain contacts. To study the electronic transport properties, we configured each defective graphene flake as a device by connecting two electrodes. The resulting current was calculated to evaluate the conductive behavior of the material. Once the two PLs have been connected to the flakes, the geometry of the overall structures have been optimized. In this case, the atoms belonging to the PLs were kept fixed, while the atoms of the device were optimized. As in the Geometry Optimization section, the XYZ files are first converted into POSCAR files, then a `dftb_in.hsd` has been prepared for each flake with the same parameters described in the Geometry Optimization section. In this case only the convergence check is
+Electron transport simulations were based on the Non-Equilibrium Green’s Function (NEGF) formalism, asimplemented in DFTB To perform NEGF calculations on the DG structures, electrodes were attached at both ends of each DG sample to model the source and drain contacts. To study the electronic transport properties, we configured each defective graphene flake as a device by connecting two electrodes. The resulting current was calculated to evaluate the conductive behavior of the material. Once the two PLs have been connected to the flakes, the geometry of the overall structures have been optimized. In this case, the atoms belonging to the PLs were kept fixed, while the atoms of the device were optimized. As in the Geometry Optimization section, the XYZ files are first converted into POSCAR files, then a `dftb_in.hsd` has been prepared for each flake with the same parameters described in the Geometry Optimization section. In this case only the convergence check is
 performed at the end of the optimization run. An example of structure obtained at the end of this process with the electrodes is shown in Figure 2a.
 
-For run this step launch `python electrodes_generator.py`
-for each flake we have this file `data_path/transport` where device is the original flake and source and drain are the terminals added to the flake for run the transport current simulation in the next step.
+To run this step, launch 
+```bash
+python electrodes_generator.py
+```
+For each flake we have a file `data_path/transport` where, device is the original flake and, source and drain are the terminals added to the flake needed to run the transport current simulation in the next step.
 
 ```json
 {
@@ -136,6 +166,7 @@ for each flake we have this file `data_path/transport` where device is the origi
     "file_name": "graphene_67"
 }
 ```
+> ⚠️ **Warning:** Before running this step, ensure that the configuration file at `/config/electrodes.yaml` is updated according to your setup.
 ## STEP 5 : Transport 
 Before running the transport simulation, the Fermi levels for both the source and drain contacts must be calculated. This is done by creating a new `dftb_in.hsd` file for each sample, using the previously generated `processed.gen` and the `transport.hsd` file. The simulation is performed at 0 K using the DivideAndConquer solver, with the `ContactHamiltonian` task parameter set to either `"source"` or `"drain"` to compute the respective Fermi levels.
 
@@ -143,8 +174,12 @@ Once both Fermi levels are obtained, the actual transport simulation can be perf
 
 The simulation outputs the transport current and one `.dat` file per atom in the flake device. Each `.dat` file contains the LDOS (Local Density of States) at a specific atomic site, with energy values in the first column and corresponding density of states in the second. The number of rows in each file is determined by the ratio of the energy range to the energy step.
 
-For this step use `auto_transport.py`
+For this step use 
+```bash 
+python auto_transport.py
+```
 
+> ⚠️ **Warning:** Before running this step, ensure that the configuration file at `/config/transport.yaml` is updated according to your setup.
 ## STEP 6: STM
 To compute the local density of states (LDOS) and scanning tunneling microscopy (STM) images, we used input files for density functional tight-binding (DFTB) simulations with DFTB+. Based on the Tersoff-Hamann theory, which models the constant-height mode of a scanning tunneling microscope, we visualized the electronic structure of defective graphene flakes. This approach provided detailed insights into how defects influence localized electronic properties.
 
@@ -154,11 +189,15 @@ The equation behind the stm image is:
 $$I = \int_{E_{\text{min}}}^{E_{\text{max}}} \rho(E) \, dE$$
 $$ \text{img}(i, j) = \sum_{a=1}^{N} - I_a \cdot \exp\left( -\tau \cdot \sqrt{(x_i - x_a)^2 + (y_j - y_a)^2 + (z_h - z_a)^2} \right) $$
 
-where $I_a $ is the tunneling current of atom  $a$, $\tau$ is a decay constant, and $z_h$ represents the scan height. The resulting STM image reflects the spatial distribution of the tunneling current over the surface, providing atomic-resolution information about the sample.
+where $I_a$ is the tunneling current of atom  $a$, $\tau$ is a decay constant, and $z_h$ represents the scan height. The resulting STM image reflects the spatial distribution of the tunneling current over the surface, providing atomic-resolution information about the sample.
 
-To run this step, execute `auto_stm.py`.
+To run this step, execute 
+```bash 
+python auto_stm.py
+```
 > **Note:** This step can be run together with `auto_transport.py` by setting the `compute_stm` option to `True` in the configuration file.
 
+> ⚠️ **Warning:** Before running this step, ensure that the configuration file at `/config/stm.yaml` is updated according to your setup.
 ## STEP 7: HD5 Dataset
 Once all steps are completed, the HDF5 files can be generated through two main stages. As a first approximation, a CSV file containing all the computed properties can be created using the dedicated function available in `paper/csv_generator.ipynb`. This notebook includes all the necessary functions to generate the CSV file, which can then be used in other learning pipelines. It also provides an initial approach to data visualisation, useful for understanding the distribution of the various calculated properties.
 
@@ -205,3 +244,5 @@ If you use this dataset, please cite it as:
   url       = {https://doi.org/10.5281/zenodo.13760109}
 }
 ```
+
+> TODO: modify the logic of slurm/outputs folder management. Probably we need to delete the files in the xyz_files_fixed because if a geometry optimization step fail

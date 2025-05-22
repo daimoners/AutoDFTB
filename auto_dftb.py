@@ -2,7 +2,7 @@ try:
     from pathlib import Path
     import submitit
     import hydra
-    from tqdm.rich import tqdm
+    from tqdm import tqdm
     from lib.poscar_lib import xyz_to_poscar
     from lib.utils_lib import (
         get_poscar_data,
@@ -37,7 +37,11 @@ def main(args):
         ic.enable()
     else:
         ic.disable()
-
+    save_path = Path(args.package_path).joinpath(args.slurm_output)
+    if save_path.exists():
+        print(f"[INFO] Cleaning existing slurm output directory: {save_path}")
+        shutil.rmtree(save_path)
+    save_path.mkdir(parents=True, exist_ok=True)
     xyz_dir = Path(args.xyz_dir)
     check_dir(xyz_dir)
     working_dir = Path(args.working_dir)

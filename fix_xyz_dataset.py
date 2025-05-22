@@ -1,6 +1,6 @@
 try:
     from pathlib import Path
-    from tqdm.rich import tqdm
+    from tqdm import tqdm
     from icecream import ic
     import hydra
     import numpy as np

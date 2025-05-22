@@ -14,7 +14,7 @@ try:
         move_xyz_to_origin,
     )
     import hydra
-    from tqdm.rich import tqdm
+    from tqdm import tqdm
     from icecream import ic
     import submitit
     import shutil
@@ -38,7 +38,11 @@ def main(args):
         ic.enable()
     else:
         ic.disable()
-
+    save_path = Path(args.package_path).joinpath(args.slurm_output)
+    if save_path.exists():
+        print(f"[INFO] Cleaning existing slurm output directory: {save_path}")
+        shutil.rmtree(save_path)
+    save_path.mkdir(parents=True, exist_ok=True)
     # === Get hydra config paths === #
     xyz_dir = Path(args.xyz_dir)
     check_dir(xyz_dir)

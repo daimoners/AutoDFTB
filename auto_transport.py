@@ -3,7 +3,7 @@ try:
     import shutil
     from icecream import ic
     import hydra
-    from tqdm.rich import tqdm
+    from tqdm import tqdm
     from lib.utils_lib import (
         xyz2gen,
         launch_bin,
