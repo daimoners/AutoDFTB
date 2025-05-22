@@ -27,7 +27,6 @@ python3 auto_dftb.py
 end3=$(date +%s)
 echo "Finished dftb script in $((end3 - start3)) seconds."
 
-
 echo "==============================="
 echo "Starting electrodes simulations"
 echo "==============================="

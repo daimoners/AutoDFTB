@@ -359,7 +359,7 @@ def main(package_path, output_path, csv_file, samples_for_file):
 
 
 if __name__ == "__main__":
-    package_path = Path("/home/tommaso/git_workspace/AutoDFTB")
+    package_path = Path("/home/mario/jobs/git_folders/AutoDFT")
     output_path = Path("./h5_files")
     csv_file = Path("./dataset.csv")
     samples_for_file = 10000

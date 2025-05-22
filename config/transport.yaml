@@ -56,7 +56,7 @@ slurm_timeout: 2800
 slurm_output: outputs/slurm_out
 slurm_exclude:
 
-scheduler: local
+scheduler: slurm
 
 # VERBOSITY
 verbose: True

@@ -33,4 +33,4 @@ slurm_exclude:
 
 # VERBOSITY
 verbose: True
-scheduler: local
+scheduler: slurm
