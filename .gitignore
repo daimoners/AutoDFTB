@@ -24,7 +24,7 @@ grafene_perfetto/
 !optimized_perfect_graphene/data_utils/*
 !test_xyz/*.xyz
 !fixed_xyz/*.xyz
-
+tests/*
 TODO.md
 prova*/
 *.csv

@@ -71,23 +71,37 @@ def main(cfg):
     out_path.mkdir(exist_ok=True, parents=True)
 
     files = [f for f in xyz_files_path.iterdir() if f.suffix.lower() == ".xyz"]
-
+    print(files)
+    import matplotlib.pyplot as plt
     for file in tqdm(files):
-        atoms, X, Y, Z = read_from_xyz_file(file)
         try:
+            atoms, X, Y, Z = read_from_xyz_file(file)
+
+            if len(X) < 5:
+                print(f"File {file} ha troppi pochi atomi, salto")
+                continue
+
             kde = gaussian_kde(X)
             x_grid = np.linspace(min(X), max(X), 5000)
             kde_data = kde.evaluate(x_grid)
+
+            # Trova i minimi della KDE
             peaks, _ = find_peaks(-kde_data)
-            peaks = sorted(peaks, key=lambda x: kde_data[x])
+            print("Picchi trovati:", peaks)
+
+            if len(peaks) == 0:
+                print(f"Fallback per {file}: nessun minimo trovato, uso argmin")
+                peak_idx = np.argmin(kde_data)
+            else:
+                peaks = sorted(peaks, key=lambda i: kde_data[i])
+                peak_idx = peaks[0]
 
             cell_x = float(cell[0])
             cell_y = float(cell[4])
             desired_centroid = cell_x / 2
-            offset = x_grid[peaks[0]] - desired_centroid
-
+            offset = x_grid[peak_idx] - desired_centroid
         except Exception as e:
-            # print(e)
+        #     print(e)
             continue
 
         if offset >= 0:
@@ -102,7 +116,7 @@ def main(cfg):
         if not check_flake_orientation(X, Y):
             continue
         write_to_xyz_file(out_path.joinpath(file.name), atoms, X, Y, Z)
-
+        print(out_path.joinpath(file.name))
         generate_electrode(
             file_path=out_path.joinpath(file.name),
             out_path=out_path.joinpath(file.name),

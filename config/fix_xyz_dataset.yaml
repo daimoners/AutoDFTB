@@ -1,4 +1,4 @@
-package_path: /home/mario/jobs/git_folders/AutoDFTB
+package_path: /home/mario/Mario/Phd_code/AutoDFTB
 xyz_files_path: ${package_path}/test_xyz
 out_path: ${package_path}/test_batch/xyz_files_fixed
 nanoribbon_path: ${package_path}/fixed_xyz/nanoribbon.xyz

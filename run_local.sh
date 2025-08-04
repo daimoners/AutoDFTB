@@ -43,16 +43,16 @@ python3 auto_transport.py
 end5=$(date +%s)
 echo "Finished transport script in $((end3 - start3)) seconds."
 
-echo "==============================="
-echo "Starting stm simulations"
-echo "==============================="
-start6=$(date +%s)
-python3 auto_stm.py
-end6=$(date +%s)
-echo "Finished transport script in $((end3 - start3)) seconds."
+# echo "==============================="
+# echo "Starting stm simulations"
+# echo "==============================="
+# start6=$(date +%s)
+# python3 auto_stm.py
+# end6=$(date +%s)
+# echo "Finished transport script in $((end3 - start3)) seconds."
 
-end_total=$(date +%s)
-echo "==============================="
-echo "All scripts completed successfully!"
-echo "Total time: $((end_total - start_total)) seconds."
-echo "==============================="
+# end_total=$(date +%s)
+# echo "==============================="
+# echo "All scripts completed successfully!"
+# echo "Total time: $((end_total - start_total)) seconds."
+# echo "==============================="

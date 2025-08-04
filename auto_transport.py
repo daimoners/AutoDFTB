@@ -10,6 +10,7 @@ try:
         check_dir,
         check_file,
         get_current_value,
+        gen2xyz
     )
     from lib.transport_lib import prepare_setupgeom_input, get_regions_dict
     from lib.dftb_lib import prepare_contact_input, prepare_transport_input
@@ -70,7 +71,7 @@ def main(args):
     else:
         already_done = []
         files = [f for f in electrodes_dir.iterdir() if f.suffix.lower() == ".xyz"]
-
+    print(files)
     for file in tqdm(files):
         xyz2gen(
             file,
@@ -267,6 +268,8 @@ def transport(args):
         transport_working_dir.joinpath("processed.gen"),
         input_contact.components,
     )
+    #convert the gen file into xyz for stm
+
     launch_bin(
         dftb_bin_path,
         transport_working_dir,
@@ -274,6 +277,7 @@ def transport(args):
         write_out_file=transport_working_dir.joinpath("transport_output.out"),
     )
 
+    current = None
     # === Prepare JSON ouput === #
     try:
         current = get_current_value(
@@ -307,7 +311,9 @@ def transport(args):
             transport_working_dir.joinpath(f"{file.stem}.json"),
             transport_output.joinpath(f"{file.stem}.json"),
         )
-
+        xyz_path=transport_output.joinpath("xyz_electrodes")
+        xyz_path.mkdir(exist_ok=True)
+        gen2xyz(transport_working_dir.joinpath("processed.gen"), xyz_path.joinpath(f"{file.stem}.xyz"))
         # === STM === #
         if args.compute_stm:
             xyz_dir = Path(args.xyz_dir)
@@ -315,7 +321,7 @@ def transport(args):
                 float(fermi_energy_source) + float(fermi_energy_drain)
             ) / 2
             stm = StmSimulator(
-                xyz_path=xyz_dir.joinpath(f"{file.stem}.xyz"),
+                xyz_path=xyz_path.joinpath(f"{file.stem}.xyz"),#xyz_dir.joinpath(f"{file.stem}.xyz"),
                 dos_per_atom_path=transport_output.joinpath(f"{file.stem}.json"),
                 fermi_level=fermi_energy_mean,
                 bias=args.bias,
@@ -335,9 +341,9 @@ def transport(args):
     except:
         raise Exception("Transport SCC not converged!")
 
-    shutil.rmtree(transport_working_dir)
-    shutil.rmtree(setupgeom_working_dir)
-    shutil.rmtree(contact_working_dir)
+    # shutil.rmtree(transport_working_dir)
+    # shutil.rmtree(setupgeom_working_dir)
+    # shutil.rmtree(contact_working_dir)
 
 
 if __name__ == "__main__":

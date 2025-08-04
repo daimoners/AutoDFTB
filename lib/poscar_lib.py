@@ -187,4 +187,4 @@ def xyz_to_poscar(
 
 
 if __name__ == "__main__":
-    pass
+    xyz_to_poscar(Path('/home/mario/Mario/Phd_code/AutoDFTB/graphene_17583_e_transport/processed.xyz'), Path('/home/mario/Mario/Phd_code/AutoDFTB/graphene_17583_e_transport/processed.POSCAR'), default_box_size=[65.00,0,0,0,34.2627,0,0,0,40])

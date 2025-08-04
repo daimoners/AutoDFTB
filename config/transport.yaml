@@ -1,8 +1,8 @@
 # PATHS
-package_path: /home/mario/jobs/git_folders/AutoDFTB
-dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
-slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
-setupgeom_bin_path: /home/mario/app/dftbplus/bin/setupgeom
+package_path: /home/mario/Mario/Phd_code/AutoDFTB
+dftb_bin_path: /home/mario/applications/dftbplus/bin/dftb+
+slakos:  /home/mario/applications/dftbplus/slakos/pbc-0-3
+setupgeom_bin_path: /home/mario/applications/dftbplus/bin/setupgeom
 working_dir: ${package_path}/tmp
 
 electrodes_dir: ${package_path}/test_batch/transport/electrodes
@@ -11,7 +11,7 @@ transport_output: ${package_path}/test_batch/transport/transport_output
 
 # BOX SIZE
 periodic: True
-box_size: [65.0, 0.0, 0.0, 0.0, 34.27629786, 0.0, 0.0, 0.0, 40.0]
+box_size: [69.1785809999999941, 0.0, 0.0, 0.0, 34.2760850000000019, 0.0, 0.0, 0.0, 40.0]
 
 # ELECTRODE
 electrode_cell:
@@ -32,12 +32,12 @@ potential_drain: -0.05
 tunnelinganddos:
   verbosity: 100
   offset_energy_range: 0.5
-  resolution: 100
+  resolution: 20
   compute_regions: True
 
 #STM
 compute_stm: True
-bias: 0.35
+bias: 0.5
 resolution: 256
 tau: 5
 scan_h: 1
@@ -56,7 +56,7 @@ slurm_timeout: 2800
 slurm_output: outputs/slurm_out
 slurm_exclude:
 
-scheduler: slurm
+scheduler: local
 
 # VERBOSITY
 verbose: True

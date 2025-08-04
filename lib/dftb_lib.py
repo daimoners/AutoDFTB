@@ -223,9 +223,9 @@ Driver = {}\n"""
                 self.args.solver = False
 
         if self.args.solver == "TransportOnly":
-            return """
-    Solver = TransportOnly {}
-        """
+            delta = 1e-4
+            return f"Solver = TransportOnly {{\n    delta = {delta:.0e}\n}}"
+
 
         elif self.args.solver == "GreensFunction":
             return """
@@ -278,6 +278,7 @@ Options {
                 """
 Analysis{
     TunnelingAndDOS{
+    delta = 1e-4
     verbosity = """
                 + f"{self.args.tunnelinganddos.verbosity}"
                 + """

@@ -525,6 +525,57 @@ def get_cell_from_gen(
 
     return [a, 0.0, 0.0, 0.0, b, 0.0, 0.0, 0.0, c]
 
+def gen2xyz(gen_path: Path, out_path: Path = None):
+    if not gen_path.is_file() or not gen_path.suffix.lower() == ".gen":
+        raise Exception(f"File {str(gen_path)} not found or not a .gen!")
+
+    if out_path is None:
+        out_path = gen_path.with_suffix(".xyz")
+
+    with open(gen_path, "r") as f:
+        lines = f.readlines()
+
+    for idx, line in enumerate(lines):
+        if line.strip().startswith(("#", "*")) or not line.strip():
+            continue
+        try:
+            natoms = int(line.strip().split()[0])
+            start_idx = idx
+            break
+        except ValueError:
+            continue
+    else:
+        raise ValueError("Non trovo una riga con il numero di atomi.")
+
+    atom_symbols_line = lines[start_idx + 1].strip()
+    atom_symbols = atom_symbols_line.split()
+    type_to_symbol = {str(i + 1): sym for i, sym in enumerate(atom_symbols)}
+
+    # Righe successive: coordinate
+    atom_lines = []
+    for line in lines[start_idx + 2:]:
+        if len(atom_lines) >= natoms:
+            break
+        if not line.strip() or line.strip().startswith(("*", "#")):
+            continue
+        parts = line.strip().split()
+        if len(parts) < 5:
+            continue
+        atom_lines.append(parts)
+
+    if len(atom_lines) != natoms:
+        raise ValueError(f"Expected {natoms} atoms, found {len(atom_lines)}.")
+
+    # Scrivi .xyz
+    with open(out_path, "w") as f_out:
+        f_out.write(f"{natoms}\n")
+        f_out.write(f"Converted from {gen_path.name}\n")
+        for parts in atom_lines:
+            type_id, x, y, z = parts[1], parts[2], parts[3], parts[4]
+            symbol = type_to_symbol.get(type_id, "X")
+            f_out.write(f"{symbol} {x} {y} {z}\n")
+
+    print(f"✅ Converted {gen_path.name} to {out_path.name}")
 
 def launch_bin(
     bin_path: Path,

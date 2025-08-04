@@ -1,13 +1,13 @@
 # PATHS
-package_path: /home/mario/jobs/git_folders/AutoDFTB
+package_path: /home/mario/Mario/Phd_code/AutoDFTB
 
-xyz_dir: ${package_path}/test_batch/transport/electrodes
+xyz_dir: ${package_path}/test_batch/transport/transport_output/xyz_electrodes
 json_dir: ${package_path}/test_batch/transport/transport_output
 out_dir: ${package_path}/test_batch/transport/stm_images_new
 
 # STM
 #fermi_energy: -4.62
-bias: 0.35
+bias: 0.6
 resolution: 256
 tau: 5
 scan_h: 1
@@ -26,4 +26,4 @@ slurm_exclude:
 
 # VERBOSITY
 verbose: True
-scheduler: slurm
+scheduler: local

@@ -12,6 +12,7 @@ try:
         check_file,
         translate_xyz_file,
         move_xyz_to_origin,
+        gen2xyz
     )
     import hydra
     from tqdm import tqdm
@@ -141,6 +142,7 @@ def generate_transport_devices(args):
     )
 
     box_size[0] += 2 * electrode_cell[0]
+    print(box_size)
     with open_dict(args):
         args.box_size = box_size
 

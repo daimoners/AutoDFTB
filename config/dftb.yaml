@@ -1,7 +1,7 @@
 # PATHS
-package_path: /home/mario/jobs/git_folders/AutoDFTB
-dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
-slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
+package_path: /home/mario/Mario/Phd_code/AutoDFTB
+dftb_bin_path: /home/mario/applications/dftbplus/bin/dftb+
+slakos:  /home/mario/applications/dftbplus/slakos/pbc-0-3
 
 xyz_dir: ${package_path}/test_batch/dftb/xyz_files_fixed_opt
 poscar_dir: ${package_path}/test_batch/dftb/poscar_files
@@ -33,4 +33,4 @@ slurm_exclude:
 
 # VERBOSITY
 verbose: True
-scheduler: slurm
+scheduler: local
