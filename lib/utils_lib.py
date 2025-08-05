@@ -4,16 +4,42 @@ try:
     from collections import OrderedDict
     import json
     import os
+    import time
     import subprocess
     import numpy as np
     from tqdm import tqdm
     from chemfiles import Trajectory
     from PIL import Image, ImageDraw
     from icecream import ic
+    from submitit.core.utils import FailedJobError
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
 
+def submit_with_retry(executor, job_obj, max_retries=6, base_delay=5):
+    for attempt in range(1, max_retries + 1):
+        try:
+            job = executor.submit(job_obj)
+            print(f"submitted after {attempt} attempts")
+            return job
+        except FailedJobError as e:
+            msg = str(e).lower()
+            is_transient = (
+                "unable to accept job" in msg
+                or "resource temporarily unavailable" in msg
+                or "batch job submission failed" in msg
+            )
+            if not is_transient:
+                # errore diverso, rilanciamo
+                raise
+            delay = base_delay * (2 ** (attempt - 1))
+            print(
+                f"[submit attempt {attempt}/{max_retries}] transient submission error: {e}. "
+                f"Retrying in {delay}s..."
+            )
+            time.sleep(delay)
+            
+    raise RuntimeError(f"Job submission failed after {max_retries} retries.")
 
 def read_from_xyz_file(file_path: Path):
     """Read xyz files and return lists of x,y,z coordinates and atoms"""

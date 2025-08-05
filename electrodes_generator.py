@@ -12,14 +12,15 @@ try:
         check_file,
         translate_xyz_file,
         move_xyz_to_origin,
-        gen2xyz
+        gen2xyz,
+        submit_with_retry,
     )
     import hydra
     from tqdm import tqdm
     from icecream import ic
     import submitit
     import shutil
-    from omegaconf import open_dict
+    from omegaconf import open_dict, OmegaConf
 
 except Exception as e:
     print(f"Some module are missing from {__file__}: {e}\n")
@@ -67,8 +68,11 @@ def main(args):
     elif args.scheduler == "local":
         run_local(files, args, working_dir)
     else:
-        print(f"Scheduler '{args.scheduler}' not recognized. Valid options: [slurm, local]")
+        print(
+            f"Scheduler '{args.scheduler}' not recognized. Valid options: [slurm, local]"
+        )
         return
+
 
 def run_local(files, args, working_dir):
     """
@@ -83,11 +87,14 @@ def run_local(files, args, working_dir):
 
         generate_transport_devices(args)
 
+
 def run_slurm(files, args, working_dir):
     """
     Submits geometry optimization jobs using SLURM via submitit.
     Each xyz file is submitted as an individual job.
     """
+    submitted_jobs = []
+    failed = []
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
@@ -117,8 +124,60 @@ def run_slurm(files, args, working_dir):
 
         executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
         slurm_auto_dftb = SLURM_Transport(args)
-        job = executor.submit(slurm_auto_dftb)
-        print(f"Submitted job_id: {job.job_id}")
+        try:
+            job = submit_with_retry(executor, slurm_auto_dftb)
+            print(f"Submitted job_id: {job.job_id}")
+            submitted_jobs.append((file, job))
+        except Exception as e:
+            print(f"Failed to submit {file.name} after retries: {e}")
+            failed.append((file, OmegaConf.to_container(args, resolve=True)))
+    if failed:
+        print("\nRetrying failed submissions with fallback adjustments...")
+    retry_failed = []
+    for file, saved_args in tqdm(failed, desc="Retry failed"):
+
+        with open_dict(args):
+            for k, v in saved_args.items():
+                setattr(args, k, v)
+        local_working_dir = Path(args.working_dir)
+        out_dir = Path(args.slurm_output).joinpath(file.stem)
+        executor = submitit.AutoExecutor(folder=str(out_dir), slurm_max_num_timeout=30)
+
+        # fallback: riduci risorse (esempio: metà cpu e memoria, minimo 1)
+        base_mem = 0 if not args.slurm_mem else args.slurm_mem
+        base_cpus = 2 if not args.slurm_ncpus else args.slurm_ncpus
+
+        executor.update_parameters(
+            mem_gb=base_mem if base_cpus is not None else 0,
+            tasks_per_node=1,
+            cpus_per_task=base_cpus,
+            timeout_min=args.slurm_timeout,
+            slurm_partition=args.slurm_partition,
+            slurm_exclude=args.slurm_exclude,
+        )
+        if args.slurm_nodelist:
+            executor.update_parameters(
+                slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
+            )
+        executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}_fallback")
+
+        slurm_auto_dftb = SLURM_Transport(args)
+        try:
+            job = submit_with_retry(executor, slurm_auto_dftb)
+            print(f"[fallback ok] Submitted job_id: {job.job_id} for {file.name}")
+            submitted_jobs.append((file, job))
+        except Exception as e:
+            print(f"[error] Fallback submission also failed for {file.name}: {e}")
+            retry_failed.append((file, str(e)))
+
+    # Recap of 2 turn failed job
+    if retry_failed:
+        print("\nSummary of permanently failed submissions:")
+        for file, err in retry_failed:
+            print(f" - {file.name}: {err}")
+    else:
+        print("\nAll failed submissions were recovered or retried.")
+
 
 def generate_transport_devices(args):
     # === Get hydra config paths === #
@@ -153,22 +212,24 @@ def generate_transport_devices(args):
     )
     with open_dict(args):
         args.moved_atoms = atom_range["device"]
-    
+
     prepare_dftbplus_input(args, working_dir.joinpath(f"{file.stem}_e.POSCAR"))
     base_output_dir = Path(args.package_path).joinpath(args.slurm_output)
     base_output_dir.mkdir(exist_ok=True, parents=True)
 
     local_path = base_output_dir.joinpath(file.stem)
     local_path.mkdir(exist_ok=True, parents=True)
-    
+
     if args.scheduler == "slurm":
         write_out_file = None
     elif args.scheduler == "local":
         write_out_file = str(local_path.joinpath(file.stem)) + ".out"
     else:
         raise ValueError(f"Scheduler {args.scheduler} not supported")
-    launch_bin(dftb_bin_path, working_dir, write_out_file=write_out_file, verbose=args.verbose)
-    
+    launch_bin(
+        dftb_bin_path, working_dir, write_out_file=write_out_file, verbose=args.verbose
+    )
+
     if not check_geometry_convergence(
         Path(args.package_path).joinpath(args.slurm_output, file.stem)
     ):

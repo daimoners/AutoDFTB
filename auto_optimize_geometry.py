@@ -15,12 +15,14 @@ try:
         check_file,
         translate_xyz_file,
         move_xyz_to_origin,
+        submit_with_retry
     )
     import hydra
     from tqdm import tqdm
     import os
     from icecream import ic
     import submitit
+    from time import time
     import shutil
     from omegaconf import open_dict
 
@@ -85,7 +87,6 @@ def main(args):
         print(f"Scheduler '{args.scheduler}' not recognized. Valid options: [slurm, local]")
         return
 
-
 def run_local(files, args, working_dir):
     """
     Processes all files locally by calling `optimize_geom()` sequentially.
@@ -106,6 +107,8 @@ def run_slurm(files, args, working_dir):
     Submits geometry optimization jobs using SLURM via submitit.
     Each xyz file is submitted as an individual job.
     """
+    submitted_jobs = []
+    failed = []
     for file in tqdm(files):
         local_working_dir = working_dir.joinpath(f"tmp_{file.stem}")
         local_working_dir.mkdir(exist_ok=True, parents=True)
@@ -135,9 +138,59 @@ def run_slurm(files, args, working_dir):
 
         executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
         slurm_auto_dftb = SLURM_Geometry(args)
-        job = executor.submit(slurm_auto_dftb)
-        print(f"Submitted job_id: {job.job_id}")
+        try:
+            job = submit_with_retry(executor, slurm_auto_dftb)
+            print(f"Submitted job_id: {job.job_id}")
+        except Exception as e:
+            print(f"Failed to submit {file.name} after retries: {e}")
+            
+    if failed:
+        print("\nRetrying failed submissions with fallback adjustments...")
+    retry_failed = []
+    for file, saved_args in tqdm(failed, desc="Retry failed"):
+     
+        with open_dict(args):
+            for k, v in saved_args.items():
+                setattr(args, k, v)
+        local_working_dir = Path(args.working_dir) 
+        out_dir = Path(args.slurm_output).joinpath(file.stem)
+        executor = submitit.AutoExecutor(folder=str(out_dir), slurm_max_num_timeout=30)
 
+        # fallback: riduci risorse (esempio: metà cpu e memoria, minimo 1)
+        base_mem = 0 if not args.slurm_mem else args.slurm_mem
+        base_cpus = 2 if not args.slurm_ncpus else args.slurm_ncpus
+
+
+        executor.update_parameters(
+            mem_gb=base_mem if base_cpus is not None else 0,
+            tasks_per_node=1,
+            cpus_per_task=base_cpus,
+            timeout_min=args.slurm_timeout,
+            slurm_partition=args.slurm_partition,
+            slurm_exclude=args.slurm_exclude,
+        )
+        if args.slurm_nodelist:
+            executor.update_parameters(
+                slurm_additional_parameters={"nodelist": f"{args.slurm_nodelist}"}
+            )
+        executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}_fallback")
+
+        slurm_auto_dftb = SLURM_Geometry(args)
+        try:
+            job = submit_with_retry(executor, slurm_auto_dftb)
+            print(f"[fallback ok] Submitted job_id: {job.job_id} for {file.name}")
+            submitted_jobs.append((file, job))
+        except Exception as e:
+            print(f"[error] Fallback submission also failed for {file.name}: {e}")
+            retry_failed.append((file, str(e)))
+
+    # Recap of 2 turn failed job
+    if retry_failed:
+        print("\nSummary of permanently failed submissions:")
+        for file, err in retry_failed:
+            print(f" - {file.name}: {err}")
+    else:
+        print("\nAll failed submissions were recovered or retried.")
 def optimize_geom(args):
     """
     Performs full geometry optimization workflow for a single xyz file.

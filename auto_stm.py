@@ -3,12 +3,13 @@ try:
     from lib.utils_lib import (
         check_dir,
         check_file,
+        submit_with_retry
     )
     import hydra
     from tqdm import tqdm
     from icecream import ic
     import submitit
-    from omegaconf import open_dict
+    from omegaconf import open_dict, OmegaConf
     from lib.stm_lib import StmSimulator
     import json
     import shutil
@@ -53,6 +54,8 @@ def main(args):
             args.json_file = str(json_dir.joinpath(f"{file.stem}.json"))
 
         if args.scheduler == "slurm":
+            submitted_jobs = []
+            failed = []
             Path(args.slurm_output).joinpath(file.stem).mkdir(
                 parents=True, exist_ok=True
             )
@@ -77,9 +80,13 @@ def main(args):
 
             executor.update_parameters(name=f"{args.slurm_job_name}_{file.stem}")
             slurm_auto_dftb = SLURM_STM(args)
-            job = executor.submit(slurm_auto_dftb)
-            print(f"Submitted job_id: {job.job_id}")
-
+            try:
+                job = submit_with_retry(executor, slurm_auto_dftb)
+                print(f"Submitted job_id: {job.job_id}")
+                submitted_jobs.append((file,job))
+            except Exception as e:
+                print(f"Failed to submit {file.name} after retries: {e}")
+                failed.append((file,  OmegaConf.to_container(args, resolve=True)))
         elif args.scheduler == "local":
             generate_stm_images(args)
 

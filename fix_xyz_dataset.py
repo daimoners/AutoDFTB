@@ -84,10 +84,10 @@ def main(cfg):
             kde = gaussian_kde(X)
             x_grid = np.linspace(min(X), max(X), 5000)
             kde_data = kde.evaluate(x_grid)
-
-            # Trova i minimi della KDE
+            
+            # Minimum search of KDE
             peaks, _ = find_peaks(-kde_data)
-            print("Picchi trovati:", peaks)
+            print(f"Found {peaks} peaks:")
 
             if len(peaks) == 0:
                 print(f"Fallback per {file}: nessun minimo trovato, uso argmin")
