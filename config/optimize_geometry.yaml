@@ -1,11 +1,11 @@
 # PATHS
 package_path: /home/mario/jobs/AutoDFTB
 dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
-slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
+slakos: /home/mario/app/dftbplus/slakos/from_cp2k/scc
 working_dir: ${package_path}/tmp
 
-xyz_dir: ${package_path}/test_batch/xyz_files_fixed
-xyz_dir_fixed: ${package_path}/test_batch/dftb/xyz_files_fixed_opt
+xyz_dir: ${package_path}/val_data/xyz_files_fixed
+xyz_dir_fixed: ${package_path}/val_data/dftb/xyz_files_fixed_opt
 
 # BOX SIZE
 periodic: True

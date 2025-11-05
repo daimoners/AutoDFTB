@@ -1,6 +1,6 @@
 package_path: /home/mario/jobs/AutoDFTB
-xyz_files_path: ${package_path}/test_xyz
-out_path: ${package_path}/test_batch/xyz_files_fixed
+xyz_files_path: ${package_path}/val_data/xyz_files
+out_path: ${package_path}/val_data/xyz_files_fixed
 nanoribbon_path: ${package_path}/fixed_xyz/nanoribbon.xyz
 
 cell: [34.43317005, 0.0, 0.0, 0.0, 34.08, 0.0, 0.0, 0.0, 10.0]

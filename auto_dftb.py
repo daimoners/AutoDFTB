@@ -265,9 +265,22 @@ def dftb(args):
     results["EA_ev"] = float(results["total_energy_eV"]) - float(
         results["total_energy_eV_+1"]
     )
-    results["band_gap_ev"] = float(results["total_energy_eV_-1"]) - float(
-        results["total_energy_eV_+1"]
-    )
+    # results["band_gap_ev"] = float(results["total_energy_eV_-1"]) + float(
+    #     results["total_energy_eV_+1"]
+    # )
+    E0 = float(results["total_energy_eV"])
+    E_minus = float(results["total_energy_eV_-1"])
+    E_plus = float(results["total_energy_eV_+1"])
+
+    results["IP_ev"] = E_minus - E0
+    results["EA_ev"] = E0 - E_plus
+    results["band_gap_ev"] = E_minus - 2 * E0 + E_plus
+
+    # results["band_gap_ev"] = (
+    #     float(results["total_energy_eV_-1"])
+    #     - 2 * float(results["total_energy_eV"])
+    #     + float(results["total_energy_eV_+1"])
+    # )
 
     # === Clear the working directory === #
     shutil.rmtree(working_dir)

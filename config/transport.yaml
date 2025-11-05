@@ -1,13 +1,13 @@
 # PATHS
-package_path: /home/mario/Mario/Phd_code/AutoDFTB
-dftb_bin_path: /home/mario/applications/dftbplus/bin/dftb+
-slakos:  /home/mario/applications/dftbplus/slakos/pbc-0-3
-setupgeom_bin_path: /home/mario/applications/dftbplus/bin/setupgeom
+package_path: /home/mario/jobs/AutoDFTB
+dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
+slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
+setupgeom_bin_path: /home/mario/app/dftbplus/bin/setupgeom
 working_dir: ${package_path}/tmp
 
-electrodes_dir: ${package_path}/test_batch/transport/electrodes
-gen_dir: ${package_path}/test_batch/transport/gen_files
-transport_output: ${package_path}/test_batch/transport/transport_output
+electrodes_dir: ${package_path}/data_batch_13/transport/electrodes
+gen_dir: ${package_path}/data_batch_13/transport/gen_files
+transport_output: ${package_path}/data_batch_13/transport/transport_output
 
 # BOX SIZE
 periodic: True
@@ -32,7 +32,7 @@ potential_drain: -0.05
 tunnelinganddos:
   verbosity: 100
   offset_energy_range: 0.5
-  resolution: 20
+  resolution: 100
   compute_regions: True
 
 #STM
@@ -41,8 +41,8 @@ bias: 0.5
 resolution: 256
 tau: 5
 scan_h: 1
-stm_output: ${package_path}/test_batch/transport/stm_images
-xyz_dir: ${package_path}/test_batch/transport/electrodes
+stm_output: ${package_path}/data_batch_13/transport/stm_images
+xyz_dir: ${package_path}/data_batch_13/transport/electrodes
 save_npy: False
 save_png: True
 
@@ -56,7 +56,7 @@ slurm_timeout: 2800
 slurm_output: outputs/slurm_out
 slurm_exclude:
 
-scheduler: local
+scheduler: slurm
 
 # VERBOSITY
 verbose: True

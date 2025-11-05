@@ -240,6 +240,7 @@ def optimize_geom(args):
         working_dir.joinpath(f"opt_{file.stem}.xyz"),
         fixed_path.joinpath(f"{file.stem}_opt.xyz"),
     )
+    
     get_cell_from_gen(
         working_dir.joinpath(f"opt_{file.stem}.gen"),
         json_output_path=fixed_path.joinpath(f"{file.stem}_opt.json"),

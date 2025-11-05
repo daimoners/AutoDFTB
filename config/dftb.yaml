@@ -1,11 +1,11 @@
 # PATHS
 package_path: /home/mario/jobs/AutoDFTB
 dftb_bin_path: /home/mario/app/dftbplus/bin/dftb+
-slakos:  /home/mario/app/dftbplus/slakos/pbc-0-3
+slakos:  /home/mario/app/dftbplus/slakos/from_cp2k/scc
 
-xyz_dir: ${package_path}/test_batch/dftb/xyz_files_fixed_opt
-poscar_dir: ${package_path}/test_batch/dftb/poscar_files
-json_dir: ${package_path}/test_batch/dftb/json_files
+xyz_dir: ${package_path}/val_data/dftb/xyz_files_fixed_opt
+poscar_dir: ${package_path}/val_data/dftb/poscar_files
+json_dir: ${package_path}/val_data/dftb/json_files
 working_dir: ${package_path}/tmp
 
 # BOX SIZE
@@ -20,6 +20,7 @@ max_steps: 100
 fermi_temperature: 1000.0
 scc: True
 spin_polarization: True
+scctolerance: 1e-10
 
 # SLURM
 slurm_job_name: DFTB_DG

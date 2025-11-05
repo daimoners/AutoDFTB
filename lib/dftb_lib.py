@@ -133,7 +133,7 @@ Driver = {}\n"""
             + f"'{self.args.slakos}/'"
             + """
         Separator = "-"
-        Suffix = ".skf"
+        Suffix = ".spl"
     }\n"""
         )
 
@@ -177,12 +177,13 @@ Driver = {}\n"""
             + f"{self.slaterkosterfiles}"
             + f"{_map_angular_momentum(self.file_name)}"
             + (f"{self.maxscciterations}" if scc else "")
+            + (f"{self.scctolerance}" if scc else "")
             + f"{self.charge}"
             + f"{self.filling}"
             + f"{self.kpoints}"
             + f"{self.spin_polarization}"
             + f"{self.truncateskrange}"
-            + f"{self.solver}"
+            + f"{self.solver}"    
             + """
 }\n"""
         )
@@ -248,7 +249,15 @@ Driver = {}\n"""
             + """
     """
         )
-
+    @property
+    def scctolerance(self):
+        return (
+            """
+    SccTolerance = """
+            + f"{self.args.scctolerance}"
+            + """
+    """
+        )
     @property
     def charge(self):
         if hasattr(self.args, "charge"):
